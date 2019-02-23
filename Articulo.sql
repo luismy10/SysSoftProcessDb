@@ -20,7 +20,20 @@ go
  agredando campo Imagen 11/12/2018
  combio el campo Image por varchar(MAX) 21/12/2018
 
+ se elimino el campo departamento 5/02/2019
+
+ se elimino el campo precio venta mayoreo 
+
+ Quitado CantidadGranel (15/02/19)
+
+ Actualizado PrecioVenta, Margen y Utilidad a PrecioVenta1, Margen1 y Utilidad1;
+ Agregado: 
+		  PrecioVenta2, Margen2, Utilidad2;
+		  PrecioVenta3, Margen3, Utilidad3  21/02/2019	
+
 */
+
+
 
 create table ArticuloTB
 (
@@ -35,20 +48,26 @@ create table ArticuloTB
 	Presentacion int,
 	UnidadCompra int,
 	UnidadVenta tinyint,
-	Departamento int,
+	--Departamento int,
 	--Localizacion int,
 	Estado int,
-	StockMinimo decimal(18,2),
-	StockMaximo decimal(18,2),
-	Cantidad decimal(18,2),
-	CantidadGranel decimal(18,2),
-	PrecioCompra decimal(18,2),	
-	PrecioVenta decimal(18,2),	
-	Margen smallint,
-	Utilidad decimal(18,2),
-	PrecioVentaMayoreo decimal(18,2),	
-	MargenMayoreo smallint,
-	UtilidadMayoreo decimal(18,2),	
+	StockMinimo decimal(18,4),
+	StockMaximo decimal(18,4),
+	Cantidad decimal(18,4),
+	--CantidadGranel decimal(18,2),
+	PrecioCompra decimal(18,4),	
+	PrecioVenta1 decimal(18,4),	
+	Margen1 smallint,
+	Utilidad1 decimal(18,4),
+	PrecioVenta2 decimal(18,4),	
+	Margen2 smallint,
+	Utilidad2 decimal(18,4),
+	PrecioVenta3 decimal(18,4),	
+	Margen3 smallint,
+	Utilidad3 decimal(18,4),
+	--PrecioVentaMayoreo decimal(18,2),	
+	--MargenMayoreo smallint,
+	--UtilidadMayoreo decimal(18,2),	
 	Lote bit,
 	Inventario bit,
 	Imagen varchar(MAX)
@@ -56,14 +75,13 @@ create table ArticuloTB
 )
 go
 
-alter table ArticuloTB
-add Lote bit
+select * from ArticuloTB
 go
 
 
 /*
 este procedimiento procedimiento
-almacenado esta en
+0almacenado esta en
 deprecate
 
 drop procedure Sp_Crud_Articulo
@@ -151,6 +169,16 @@ go
 SELECT IdArticulo,Clave,NombreMarca,Lote,Cantidad FROM ArticuloTB WHERE Cantidad = 0
 GO
 
+update ArticuloTB set UnidadCompra = 58
+
+select * from ArticuloTB
+
+
+/*
+	Eliminado campo CantidadGranel 21/02/19
+	Actualizado campos PrecioVenta, Margen y Utilidad a PrecioVenta1, Margen1 y Utilidad1 21/02/19
+	Agregado campos PrecioVenta2, Margen2, Utilidad2, PrecioVenta3, Margen3 y Utilidad3 21/02/19
+*/
 alter procedure Sp_Get_Articulo_By_Id
 @Clave varchar(45)
 as
@@ -161,13 +189,32 @@ as
 		Presentacion,dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') as PresentacionNombre,
 		UnidadCompra,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
 		UnidadVenta,
-		Departamento,dbo.Fc_Obtener_Nombre_Detalle(Departamento,'0014') as DepartamentoNombre,
-		StockMinimo,StockMaximo,PrecioCompra,PrecioVenta,Margen,Utilidad,PrecioVentaMayoreo,
-		Cantidad,CantidadGranel,Estado,Lote,Inventario,Imagen
+		StockMinimo,StockMaximo,PrecioCompra,PrecioVenta1,Margen1,Utilidad1,
+		PrecioVenta2,Margen2,Utilidad2,PrecioVenta3,Margen3,Utilidad3,
+		Cantidad,Estado,Lote,Inventario,Imagen,
+		Impuesto,dbo.Fc_Obtener_Nombre_Impuesto(Impuesto) as ImpuestoNombre
 		from ArticuloTB
 		where Clave=@Clave
 	end
 go
+
+CREATE function [dbo].[Fc_Obtener_Nombre_Impuesto]
+	(
+	 @IdImpuesto int
+	)
+	RETURNS VARCHAR(50)
+	AS
+	BEGIN
+		DECLARE @Result VARCHAR(50)
+			BEGIN
+				SET @Result = (SELECT Nombre FROM ImpuestoTB WHERE IdImpuesto = @IdImpuesto)	
+			END
+			RETURN @Result
+	END
+go
+
+
+SELECT * FROM ArticuloTB
 
 /*
 este procedimiento procedimiento
@@ -197,43 +244,79 @@ Sp_Listar_Articulo '283875418426'
 GO
 
 
+/*
+	Eliminado campo CantidadGranel 21/02/19
+	Actualizado Campo PrecioVenta a PrecioVenta1 21/02/19
+*/
 alter procedure Sp_Listar_Articulo
 @search varchar(100)
 as
 	begin
-		select IdArticulo,Clave,NombreMarca,
-		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
-		Cantidad,
-		CantidadGranel,
-		PrecioVenta,
-		UnidadVenta,
-		dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
-		Imagen	
-		from ArticuloTB 
-		where (@search = '') 
-		or 
-		(Clave like @search+'%')
-		or
-		(ClaveAlterna like @search+'%')
-		or
-		(NombreMarca like @search +'%')
-		order by NombreMarca asc
+			select IdArticulo,Clave,NombreMarca,
+			dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+			Cantidad,
+			PrecioVenta1,
+			UnidadVenta,
+			dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,
+			dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
+			Imagen	
+			from ArticuloTB 
+			where 			
+			(@search = '' ) 
+			or 
+			(Clave = @search )
+			or
+			(ClaveAlterna = @search )
+			or
+			(NombreMarca like @search +'%')
+			
+			order by NombreMarca asc
+
+		
 	end
 go
 
+/*
+	Eliminado campo CantidadGranel 21/02/19
+	Actualizado Campo PrecioVenta a PrecioVenta1 21/02/19
+*/
+alter procedure Sp_Listar_Articulo_Categoria
+@Categoria int
+as
+	begin
+			select IdArticulo,Clave,NombreMarca,
+			dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+			Cantidad,
+			PrecioVenta1,
+			UnidadVenta,
+			dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,
+			dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
+			Imagen	
+			from ArticuloTB 
+			where Categoria=@Categoria			
+			order by NombreMarca asc
+	end
+go
+
+/*
+	Actualizado campo PrecioVenta a PrecioVenta1 21/02/19
+	Agregado campos: Margen1, Utilidad1,
+					 PrecioVenta2, Margen2, Utilidad2,
+					 PrecioVenta3, Margen3 y Utilidad3
+*/
 
 alter procedure Sp_Listar_Articulo_Lista_View
 @search varchar(100)
 as
 	begin
 		select IdArticulo,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
-		Cantidad,PrecioVenta,UnidadVenta,Inventario
+		Cantidad,PrecioCompra,PrecioVenta1,Margen1,Utilidad1,PrecioVenta2,Margen2,Utilidad2,PrecioVenta3,Margen3,Utilidad3,UnidadVenta,Inventario,Impuesto,Lote
 		from ArticuloTB 
 		where (@search = '') 
 		or 
-		(Clave like @search+'%')
+		(Clave = @search)
 		or
-		(ClaveAlterna like @search+'%')
+		(ClaveAlterna = @search)
 		or
 		(NombreMarca like @search +'%')
 		order by NombreMarca asc
@@ -251,7 +334,6 @@ as
 		dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,UnidadVenta,Lote,Inventario
 		from ArticuloTB 
 		where Clave = @search
-
 	end
 go
 
@@ -394,7 +476,7 @@ alter procedure Sp_Generar_Listardo_CodBar
 @Categoria int
 as
 	begin
-		SELECT Clave,NombreMarca,UnidadVenta,Categoria
+		SELECT Clave,ClaveAlterna,NombreMarca,UnidadVenta,Categoria
          FROM ArticuloTB
 		 WHERE (@UnidadVenta = 0 and @Categoria = 0) 
 		 or 

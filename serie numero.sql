@@ -15,13 +15,13 @@ go
 truncate table [dbo].[ComprobanteTB]
 go
 
-select * from [dbo].[ComprobanteTB]
-go
-
 PRINT dbo.Fc_Serie_Numero_Generado()
 GO
 
-create function Fc_Serie_Numero_Generado() returns varchar(40)
+/*
+eliminado y se cambio a otro nuevo
+*/
+drop function Fc_Serie_Numero_Generado() returns varchar(40)
 as
 	begin
 	declare @serie varchar(8), @resultSerie varbinary(2),@numeracion varchar(16),@resulNumeracion varchar(16)

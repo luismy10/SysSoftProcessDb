@@ -4,8 +4,6 @@ GO
 USE PuntoVentaSysSoftDB
 go
 
-
-
 --declare @count INT =40254;
 --WHILE @count <= 40254+80000
 --BEGIN

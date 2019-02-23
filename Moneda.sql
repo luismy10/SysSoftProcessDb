@@ -26,3 +26,5 @@ as
 		select IdMoneda,Nombre,Abreviado,Simbolo,TipoCambio,Predeterminado from MonedaTB
 	end
 go
+
+

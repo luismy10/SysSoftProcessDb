@@ -1,27 +1,36 @@
 use [PuntoVentaSysSoftDB]
 
 create table CajaTB(
-	IdCaja int identity(1,1) not null,
-	IdCajaTrabajador int not null,
-	MontoInicial decimal(18,2) not null,
-	MontoFinal decimal(18,2) not null,
-	Estado varchar(12)not null,
-	Fecha datetime not null,
+	IdCaja int identity(1,1) not null,	
+	MontoInicial decimal(18,2),
+	MontoFinal decimal(18,2),
+	Entrada decimal(18,2),
+	Salida decimal(18,2),
+	Devolucion decimal(18,2),
+	FechaApertura datetime,
+	FechaCierre datetime,
+	Estado varchar(12),
+	IdEmpleado varchar(12),
 	primary key(IdCaja)
 )
 
-create table CajaTrabajadorTB(
+drop table CajaTrabajadorTB(
 	IdCajaTrabajador int identity(1,1) not null,
-	IdEmpleado varchar(12) not null,
-	MontoInicial decimal(18,2) not null,
-	Entrada decimal(18,2) not null,
+	MontoInicial decimal(18,2),
+	MontoFinal decimal(18,2),
+	Entrada decimal(18,2),
 	Salida decimal(18,2),
 	Devolucion decimal(18,2),
-	Estado varchar(12) not null,
-	FechaApertura datetime not null,
-	FechaCierre datetime not null,
+	FechaApertura datetime,
+	FechaCierre datetime,
+	Estado varchar(12),
+	IdEmpleado varchar(12),
 	primary key(IdCajaTrabajador)
 )
+
+select * from CajaTB
+select * from CajaTB  where Estado = 'activo'
+
 
 truncate table CajaTB
 truncate table CajaTrabajadorTB
@@ -42,3 +51,13 @@ create procedure Sp_Aperturar_Caja
 as
 insert into CajaTB(IdCajaTrabajador,MontoInicial,MontoFinal,Estado,Fecha)
 values(@IdCajaTrabajador,@MontoInicial,@MontoFinal,@Estado,@Fecha)
+
+select sum(MontoFinal) as 'Ventas Totales' from CajaTB where IdEmpleado = 'EM0001' and Estado = 'activo'
+
+select MontoInicial as 'Fondo en caja' from CajaTB where IdEmpleado = 'EM0001' and Estado = 'activo'
+
+select Entrada from CajaTB where IdEmpleado = 'EM0001' and Estado = 'activo'
+
+select Salida from CajaTB where IdEmpleado = 'EM0001' and Estado = 'activo'
+
+select Devolucion from CajaTB where IdEmpleado = 'EM0001' and Estado = 'activo'

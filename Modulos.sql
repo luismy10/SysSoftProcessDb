@@ -86,6 +86,13 @@ create function Fc_Empleado_Codigo_Alfanumerico()  returns varchar(12)
 		end
 go
 
+--administrador
+----
+--caja
+-----
+--
+
+
 create table RolTB
 (
 	IdRol int identity(1,1) not null,
@@ -94,65 +101,6 @@ create table RolTB
 )
 go
 
-SELECT * FROM RolTB
-GO
-
-
---administrador
-----
---caja
------
---
---
---
---
---
-
-create table PermisoMenusTB(
-	IdRol int not null,
-	IdMenus int not null,
-	Estado bit not null
-	primary key(IdRol,IdMenus)
-
-)
-go
-
-select * from PermisoMenusTB
-go
-
-select m.IdMenu,m.Nombre,pm.Estado from 
-PermisoMenusTB as pm inner join RolTB as r 
-on pm.IdRol = r.IdRol
-inner join MenuTB as m 
-on pm.IdMenus = m.IdMenu
-where pm.IdRol = 2 
-go
-
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(1,1,1)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(1,2,1)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(1,3,1)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(1,4,1)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(1,5,1)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(1,6,1)
-go
-
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(2,1,1)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(2,2,1)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(2,3,0)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(2,4,0)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(2,5,0)
-go
-insert into PermisoMenusTB(IdRol,IdMenus,Estado)values(2,6,0)
-go
 
 create table MenuTB
 (
@@ -162,42 +110,92 @@ create table MenuTB
 )
 go
 
-insert into MenuTB(Nombre) values('INICIO',0)
-go
-insert into MenuTB(Nombre) values('OPERACIONES',0)
-go
-insert into MenuTB(Nombre) values('CONSULTAS',0)
-go
-insert into MenuTB(Nombre) values('REPORTES',0)
-go
-insert into MenuTB(Nombre) values('GRÁFICOS',0)
-go
-insert into MenuTB(Nombre) values('CONFIGURACIÓN',0)
-go
-
-SELECT * FROM MenuTB
-GO
-SELECT * FROM SubmenuTB
-GO
-
 create table SubmenuTB
 (
 	IdSubmenu int identity not null,
 	Nombre varchar(30) not null,
-	Estado bit not null,
 	IdMenu int not null,
 	primary key(IdSubmenu)
 )
 go
 
-SELECT IdSubmenu,Nombre,Estado FROM SubmenuTB where IdMenu = 
-GO
+create table PermisoMenusTB(
+	IdRol int not null,
+	IdMenus int not null,
+	Estado bit not null
+	primary key(IdRol,IdMenus)
+)
+go
 
-insert into SubmenuTB(Nombre,Estado,IdMenu) values('MI EMPRESA',0,6)
+create table PermisoSubMenusTB(
+	IdRol int,
+	IdMenus int,
+	IdSubMenus int,
+	Estado bit not null
+)
 go
-insert into SubmenuTB(Nombre,Estado,IdMenu) values('TABLAS BÁSICAS',0,6)
+
+select * from EmpleadoTB
 go
-insert into SubmenuTB(Nombre,Estado,IdMenu) values('ROLES',0,6)
+
+select * from RolTB
 go
-insert into SubmenuTB(Nombre,Estado,IdMenu) values('EMPLEADOS',0,6)
+
+select * from MenuTB
 go
+
+select * from SubmenuTB
+go
+
+select * from PermisoMenusTB
+go
+
+select * from PermisoSubMenusTB
+go
+
+/*
+	administrador
+		--inicio
+		--operaciones
+		--consultas
+		--reportes
+		--graficos
+		--configuracion
+*/
+
+/*
+		inicio
+		operaciones
+			--ventas
+			--compras
+			--articulos
+			--clientes
+			--proveedores
+			--lotes
+			--inventario inicial
+		consultas
+			--ventas
+			--compras
+			--directorio
+			--articulos
+			--inventario
+
+*/
+
+
+
+select m.IdMenu,m.Nombre,pm.Estado from 
+PermisoMenusTB as pm inner join RolTB as r 
+on pm.IdRol = r.IdRol
+inner join MenuTB as m 
+on pm.IdMenus = m.IdMenu
+where pm.IdRol = 2 
+go
+
+select sm.IdSubmenu,sm.Nombre,psm.Estado from PermisoSubMenusTB as psm inner join RolTB as r 
+on psm.IdRol = r.IdRol
+inner join SubmenuTB as sm
+on psm.IdSubMenus = sm.IdSubmenu
+where psm.IdRol = 2 and psm.IdMenus = 2
+go
+
