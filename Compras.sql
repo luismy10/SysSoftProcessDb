@@ -4,15 +4,17 @@ go
 ----------------------------------------------compra-----------------------------------------------------------
 
 /*
+ se quito el campo representante
  Agregado campo(s) ipoMoneda 15/02/19
  Modificado SubTotal, Descuento y Total a 4 decimales 16/02/19
  Agregado campos(s) Observaciones y Notas 16/02/19
+ Agrego campos TipoCompra y EstadoCompra 28/02/2019
 */
 create table CompraTB
 (
 	IdCompra varchar(12) primary key not null,
 	Proveedor varchar(12) not null,
-	Representante varchar(12) null,
+	--Representante varchar(12) null,
 	Comprobante int null,
 	Numeracion varchar(20) null,
 	TipoMoneda int not null,
@@ -23,22 +25,33 @@ create table CompraTB
 	--Igv decimal(18,2) null,
 	Total decimal(18,4) not null,
 	Observaciones varchar(300) null,
-	Notas varchar(300) null
+	Notas varchar(300) null,
+	TipoCompra varchar(15) null,
+	EstadoCompra varchar(15) null
 )
+go 
+
+select * from CompraTB
+
+exec Sp_Listar_Compras 0,'','','',''
+
+exec Sp_Listar_Compras 1,'','2019-01-01','2019-03-05',''
+
+exec Sp_Listar_Compras 2,'','2019-01-01','2019-03-05','pendiente'
+
 go
-
-
 alter procedure Sp_Listar_Compras
 @Opcion bigint,
 @Search varchar(100),
 @FechaInicial varchar(20),
-@FechaFinal varchar(20)
+@FechaFinal varchar(20),
+@EstadoCompra varchar(15)
 as
-	if(@Opcion = 1)
+	if(@Opcion = 0)
 		begin
 			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
 			CAST(c.FechaCompra as Date) as Fecha,c.Numeracion,
-			p.NumeroDocumento,p.RazonSocial,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
+			p.NumeroDocumento,p.RazonSocial, c.EstadoCompra,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
 			where (@Search = '')
@@ -46,17 +59,26 @@ as
 			or (p.NumeroDocumento like @Search+'%') 
 			or (p.RazonSocial like '%'+@Search+'%')
 		end
-	else
+
+	else if(@Opcion = 1)
 		begin
 			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
 			CAST(c.FechaCompra as Date) as Fecha,c.Numeracion,
-			p.NumeroDocumento,p.RazonSocial,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
+			p.NumeroDocumento,p.RazonSocial, c.EstadoCompra,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
 			where (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal)
 		end
+	else if(@Opcion = 2)
+		begin
+			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
+			CAST(c.FechaCompra as Date) as Fecha,c.Numeracion,
+			p.NumeroDocumento,p.RazonSocial, c.EstadoCompra,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
+			from CompraTB as c inner join ProveedorTB as p
+			on c.Proveedor = p.IdProveedor
+			where (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal) and c.EstadoCompra = @EstadoCompra
+		end
 		
-
 go
 
 
@@ -166,6 +188,9 @@ truncate table DetalleCompraTB
 go
 truncate table LoteTB
 go
+truncate table PagoProveedoresTB
+go
+
 
 select * from CompraTB
 go
@@ -173,26 +198,11 @@ select * from DetalleCompraTB
 go
 select * from LoteTB
 go
-
-select p.NumeroDocumento,p.RazonSocial as Proveedor from CompraTB as c inner join ProveedorTB as p
-on c.Proveedor = p.IdProveedor
-where c.IdCompra = 'CP0001'
+select * from  PagoProveedoresTB
+go
+select * from  PlazosTB
 go
 
-select p.ApellidoPaterno,p.ApellidoMaterno,p.PrimerNombre,P.SegundoNombre from CompraTB as c inner join PersonaTB as p
-on c.Representante = p.IdPersona
-where c.IdCompra = 'CP0003'
-go
-
-select d.Atributo,d.Valor from ProveedorTB as p inner join DirectorioTB as d
-on p.IdProveedor = d.IdPersona
-where d.IdPersona = 'PR0001'
-go
-
-select d.Atributo,d.Valor from PersonaTB as p inner join DirectorioTB as d
-on p.IdPersona = d.IdPersona
-where d.IdPersona = 'PE0001'
-go
 
 select FORMAT(CAST(FechaCompra as date),'MMMM/dd/yyyy') as Fecha,dbo.Fc_Obtener_Nombre_Detalle(Comprobante,'0009') as Comprobante,Numeracion,Total from CompraTB
 where IdCompra = 'CP0001'
@@ -218,7 +228,8 @@ create procedure Sp_Listar_Detalle_Compra
 @IdCompra varchar(12)
 as
 select 
-a.Clave,a.NombreMarca,d.Cantidad,a.UnidadVenta,dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra ,d.PrecioCompra,d.Descuento,d.IdImpuesto,d.ValorImpuesto,d.ImpuestoSumado,d.Importe
+a.Clave,a.NombreMarca,d.Cantidad,a.UnidadVenta,dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra ,
+d.PrecioCompra,d.Descuento,d.IdImpuesto,d.ValorImpuesto,d.ImpuestoSumado,d.Importe
 from DetalleCompraTB as d inner join ArticuloTB as a
 on d.IdArticulo = a.IdArticulo
 where d.IdCompra = @IdCompra
@@ -247,12 +258,6 @@ CREATE TABLE LoteTB (
   --KEY `fk_lote_notaCredito1` (`ncr_id`)
 )
 go
-
-truncate table LoteTB
-go
-select * from LoteTB
-go
-
 
 alter procedure Sp_Listar_Lote
 @opcion bigint,
@@ -285,7 +290,36 @@ else if(@opcion = 2)
 	end
 GO
 
-SELECT COUNT(FechaCaducidad) AS Caducados FROM LoteTB WHERE FechaCaducidad < CAST(GETDATE() AS DATE)
 
-select DATEDIFF(day, FechaCaducidad,GETDATE()) from LoteTB 
+/*
+ Agregado Tabla CuentasCobrarProveedoresTB 01/03/19
+*/
+create table PagoProveedoresTB(
+	IdPagoProveedores int primary key identity(1,1) not null,
+	MontoTotal decimal(18,4) null,
+	MontoActual decimal(18,4) null,
+	CuotaTotal int null,
+	CuotaActual int null,
+	Plazos varchar(12) null,
+	FechaInicial dateTime null,
+	FechaActual datetime null,
+	FechaFinal datetime null,
+	Observacion varchar(30) null,
+	Estado varchar(12) null,
+	IdProveedor varchar(12) null,
+	IdCompra varchar(12) null	
+)
+
+/*
+ Agregado Tabla PlazosTB 02/03/19
+*/
+create table PlazosTB(
+	IdPlazos int primary key identity(1,1) not null,
+	Nombre varchar(15) null,
+	Dias int null,
+	Estado bit null,
+	Predeterminado bit null
+)
+
+go
 

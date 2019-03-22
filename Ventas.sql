@@ -2,7 +2,7 @@ use PuntoVentaSysSoftDB
 go
 
 select * from VentaTB
-go
+go 
 
 truncate table  VentaTB
 go
@@ -10,6 +10,8 @@ go
 /*
 se agrega la columna moneda int
 se cambio al campo estado de tipo de dato de un varchar a un int
+cambio de la longitud del detalle de venta
+y quital algunos campos
 */
 
 create table VentaTB(
@@ -21,13 +23,15 @@ create table VentaTB(
 	Serie varchar(8) not null,
 	Numeracion varchar(16) not null,
 	FechaVenta datetime not null,
-	SubTotal decimal(18,2) not null,
-	Gravada decimal(18,2) not null,
-	Descuento decimal(18,2) not null,
-	Igv decimal(18,2) not null,
-	Total decimal(18,2) not null,
+	SubTotal decimal(18,4) not null,
+	--Gravada decimal(18,2) not null,
+	Descuento decimal(18,4) not null,
+	--Igv decimal(18,2) not null,
+	Total decimal(18,4) not null,
 	Estado int null,
-	Observaciones varchar(200) null,	
+	Observaciones varchar(200) null,
+	Efectivo decimal(18,4) not null,
+	Vuelto decimal(18,4) not null,	
 	primary key(IdVenta)
 )
 go
@@ -36,72 +40,75 @@ Sp_Listar_Ventas ''
 GO
 
 alter procedure Sp_Listar_Ventas
-@search varchar(100)
-as
-select ROW_NUMBER() over( order by v.IdVenta desc) as Filas ,
-IdVenta,
-v.FechaVenta,
-c.Apellidos + ' '+c.Nombres as Cliente,
-td.Nombre as Comprobante,
-v.Serie,v.Numeracion,
-dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-m.Abreviado,
-v.Total,
-v.Observaciones
-from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
-inner join TipoDocumentoTB as td on v.Comprobante = IdTipoDocumento
-inner join MonedaTB as m on v.Moneda = m.IdMoneda
-where 
-(CAST(FechaVenta as date) = cast(GETDATE() as date) and @search = '')
-OR (CONCAT(Serie,'-',Numeracion) LIKE @search+'%')
-OR (
-	(CONCAT(c.Apellidos,'',c.Nombres) LIKE @search+'%')
-	OR
-	(CONCAT(c.Nombres,' ',c.Apellidos) LIKE @search+'%')
-)
-go
-
-alter procedure Sp_Listar_Ventas_By_Date
+@opcion smallint,
+@search varchar(100),
 @FechaInicial varchar(20),
 @FechaFinal varchar(20),
 @Comprobante int,
 @Estado int
 as
-select ROW_NUMBER() over( order by v.IdVenta desc) as Filas ,
-IdVenta,
-v.FechaVenta,
-c.Apellidos + ' '+c.Nombres as Cliente,
-td.Nombre as Comprobante,
-v.Serie,v.Numeracion,
-dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-m.Abreviado,
-v.Total,
-v.Observaciones
-from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
-inner join TipoDocumentoTB as td on v.Comprobante = td.IdTipoDocumento
-inner join MonedaTB as m on v.Moneda = m.IdMoneda
-where 
-(
-	CAST(FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0
-)
-OR
-(
-	CAST(FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado
-)
-OR
-(
-	CAST(FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0
-)
-OR
-(
-	CAST(FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado
-)
-
+if(@opcion = 1)
+	begin
+		select ROW_NUMBER() over( order by v.IdVenta desc) as Filas ,
+		IdVenta,
+		v.FechaVenta,
+		c.Apellidos + ' '+c.Nombres as Cliente,
+		td.Nombre as Comprobante,
+		v.Serie,v.Numeracion,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
+		m.Abreviado,
+		v.Total,
+		v.Observaciones
+		from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
+		inner join TipoDocumentoTB as td on v.Comprobante = IdTipoDocumento
+		inner join MonedaTB as m on v.Moneda = m.IdMoneda
+		where 
+		(@search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) )
+		OR (@search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' )
+		OR (
+			(@search <> '' AND CONCAT(c.Apellidos,'',c.Nombres) LIKE @search+'%')
+			OR
+			(@search <> '' AND CONCAT(c.Nombres,' ',c.Apellidos) LIKE @search+'%')
+		)
+	end
+else
+	begin
+		select ROW_NUMBER() over( order by v.IdVenta desc) as Filas ,
+		IdVenta,
+		v.FechaVenta,
+		c.Apellidos + ' '+c.Nombres as Cliente,
+		td.Nombre as Comprobante,
+		v.Serie,v.Numeracion,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
+		m.Abreviado,
+		v.Total,
+		v.Observaciones
+		from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
+		inner join TipoDocumentoTB as td on v.Comprobante = td.IdTipoDocumento
+		inner join MonedaTB as m on v.Moneda = m.IdMoneda
+		where 
+		(
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0
+		)
+		OR
+		(
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado
+		)
+		OR
+		(
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0
+		)
+		OR
+		(
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado
+		)
+	end
 
 go
 
+
 select  dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,m.Simbolo,v.Total
-from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
+from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda 
 where v.IdVenta = ?
 go
 
@@ -109,7 +116,9 @@ go
 alter procedure Sp_Listar_Ventas_Detalle_By_Id 
 @IdVenta varchar(12)
 as
-	select ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,a.IdArticulo,a.NombreMarca,a.UnidadVenta,d.Cantidad,d.PrecioUnitario,d.Descuento,d.Importe
+	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
+	d.IdArticulo,a.Clave,a.NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra, d.IdImpuesto,
+	d.Cantidad,d.PrecioVenta,d.Descuento,d.ValorImpuesto,d.ImpuestoSumado,d.Importe
 	 from DetalleVentaTB as d inner join ArticuloTB as a on d.IdArticulo = a.IdArticulo
 	 where d.IdVenta = @IdVenta
 go
@@ -174,46 +183,38 @@ truncate table DetalleVentaTB
 go
 truncate table ComprobanteTB
 go
-
-
-select * from VentaTB where IdVenta = 'VT0003'
+truncate table CuentasClienteTB
 go
-select * from DetalleVentaTB where IdVenta = 'VT0003'
+
+select * from VentaTB
+go
+select * from DetalleVentaTB 
 go
 select * from ComprobanteTB
 go
-
+select * from CuentasClienteTB
+go
 
 
 create table DetalleVentaTB(
 	IdVenta varchar(12) not null,
 	IdArticulo varchar(12) not null,
-	Cantidad decimal(18,2) not null,
-	PrecioUnitario decimal(18, 2) not null,
-	Descuento decimal(18, 2) null,
-	Importe decimal(18, 2) not null,
+	Cantidad decimal(18,4) not null,
+	PrecioVenta decimal(18, 4) not null,
+	Descuento decimal(18, 4) null,
+
+	IdImpuesto int null,
+	NombreImpuesto varchar(12) null,
+	ValorImpuesto decimal(18,4) null,
+	ImpuestoSumado decimal(18,4) null,
+
+	Importe decimal(18, 4) not null,
 	PRIMARY KEY (IdVenta,IdArticulo)
 )
 go
 
-
 update ArticuloTB set Cantidad = Cantidad + ? where IdArticulo = ?
 go
-
-select e.Apellidos,e.Nombres 
-from VentaTB as v inner join EmpleadoTB as e 
-on v.Vendedor = e.IdEmpleado
-where v.IdVenta = ?
-
-SELECT Clave,NombreMarca FROM ArticuloTB
-WHERE UnidadVenta = 2
-
-go
-
-select * from VentaTB
-go
-
-Sp_Reporte_General_Ventas '16/01/2019','22/02/2019',0
 
 alter procedure Sp_Reporte_General_Ventas 
 @FechaInicial varchar(20),
@@ -228,4 +229,52 @@ where
 or
 ( CAST(FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @TipoDocumento)
 order by v.FechaVenta desc
+go
+
+
+alter procedure Sp_Obtener_Venta_ById
+@idVenta varchar(12)
+as
+	begin
+		select  v.FechaVenta,c.Apellidos,c.Nombres,t.Nombre as Comprobante,t.NombreImpresion,
+		v.Serie,v.Numeracion,v.Observaciones,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,m.Simbolo,Efectivo,Vuelto
+        from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
+		inner join ClienteTB as c on v.Cliente = c.IdCliente
+		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
+        where v.IdVenta = @idVenta
+	end
+go
+
+create table CuentasClienteTB(
+	IdCuentaClientes int identity(1,1) not null,
+	IdVenta varchar(12) not null,
+	IdCliente varchar(12) not null,
+	Plazos int not null,
+	FechaVencimiento datetime not null,
+	MontoInicial decimal(18,4) not null
+	primary key(IdCuentaClientes)
+)
+go
+
+select * from CuentasClienteTB
+go
+
+alter procedure Sp_Get_CuentasCliente_By_Id
+@IdVenta VARCHAR(12)
+as
+SELECT c.IdCliente,p.Nombre,c.FechaVencimiento,MontoInicial 
+FROM CuentasClienteTB as c inner join PlazosTB as p
+on c.Plazos = p.IdPlazos
+WHERE c.IdVenta = @IdVenta
+go
+
+create table CuentasHistorialClienteTB(
+	IdCuentasHistorialCliente int not null,
+	IdCuentaClientes int not null,
+	Abono decimal(18,4) not null,
+	FechaAbono datetime not null,
+	Referencia varchar(120) null,
+	primary key(IdCuentasHistorialCliente,IdCuentaClientes)
+)
 go

@@ -56,12 +56,18 @@ create table ArticuloTB
 	Cantidad decimal(18,4),
 	--CantidadGranel decimal(18,2),
 	PrecioCompra decimal(18,4),	
+
+	PrecioVentaNombre1 int,
 	PrecioVenta1 decimal(18,4),	
 	Margen1 smallint,
 	Utilidad1 decimal(18,4),
+
+	PrecioVentaNombre2 int,
 	PrecioVenta2 decimal(18,4),	
 	Margen2 smallint,
 	Utilidad2 decimal(18,4),
+
+	PrecioVentaNombre3 int,
 	PrecioVenta3 decimal(18,4),	
 	Margen3 smallint,
 	Utilidad3 decimal(18,4),
@@ -77,6 +83,7 @@ go
 
 select * from ArticuloTB
 go
+
 
 
 /*
@@ -298,11 +305,14 @@ as
 	end
 go
 
+select * from ArticuloTB where NombreMarca = 'almoada carita feliz'
+select * from DetalleCompraTB
+
 /*
 	Actualizado campo PrecioVenta a PrecioVenta1 21/02/19
-	Agregado campos: Margen1, Utilidad1,
-					 PrecioVenta2, Margen2, Utilidad2,
-					 PrecioVenta3, Margen3 y Utilidad3
+	Agregado campos: PrecioVentaNombre1, Margen1, Utilidad1,
+					 PrecioVentaNombre2, PrecioVenta2, Margen2, Utilidad2,
+					 PrecioVentaNombre3, PrecioVenta3, Margen3 y Utilidad3
 */
 
 alter procedure Sp_Listar_Articulo_Lista_View
@@ -310,7 +320,11 @@ alter procedure Sp_Listar_Articulo_Lista_View
 as
 	begin
 		select IdArticulo,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
-		Cantidad,PrecioCompra,PrecioVenta1,Margen1,Utilidad1,PrecioVenta2,Margen2,Utilidad2,PrecioVenta3,Margen3,Utilidad3,UnidadVenta,Inventario,Impuesto,Lote
+		Cantidad,PrecioCompra,
+		dbo.Fc_Obtener_Nombre_Detalle(PrecioVentaNombre1,'0010') as PrecioNombre1,PrecioVenta1,Margen1,Utilidad1,
+		dbo.Fc_Obtener_Nombre_Detalle(PrecioVentaNombre2,'0010') as PrecioNombre2,PrecioVenta2,Margen2,Utilidad2,
+		dbo.Fc_Obtener_Nombre_Detalle(PrecioVentaNombre3,'0010') as PrecioNombre3,PrecioVenta3,Margen3,Utilidad3,
+		UnidadVenta,Inventario,Impuesto,Lote
 		from ArticuloTB 
 		where (@search = '') 
 		or 
@@ -330,8 +344,8 @@ as
 	begin
 		select IdArticulo,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') as Presentacion ,
-		Cantidad,PrecioVenta,
-		dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,UnidadVenta,Lote,Inventario
+		Cantidad,PrecioVenta1,
+		UnidadVenta,Lote,Inventario,Impuesto
 		from ArticuloTB 
 		where Clave = @search
 	end

@@ -1,6 +1,7 @@
 use PuntoVentaSysSoftDB
 go
 
+
 create table MonedaTB(
 	IdMoneda int identity not null,
 	Nombre varchar(100) not null,
@@ -11,13 +12,6 @@ create table MonedaTB(
 	primary key(IdMoneda)
 )
 go
-
-TRUNCATE TABLE MonedaTB
-GO
-
-SELECT * FROM MonedaTB
-WHERE Predeterminado =1 
-GO
 
 
 create procedure Sp_Listar_Monedas
