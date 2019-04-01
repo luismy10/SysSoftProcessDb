@@ -259,22 +259,30 @@ go
 
 select * from CuentasClienteTB
 go
+select * from CuentasHistorialClienteTB
+go
 
 alter procedure Sp_Get_CuentasCliente_By_Id
 @IdVenta VARCHAR(12)
 as
-SELECT c.IdCliente,p.Nombre,c.FechaVencimiento,MontoInicial 
+SELECT c.IdCuentaClientes,c.IdCliente,p.Nombre,c.FechaVencimiento,MontoInicial 
 FROM CuentasClienteTB as c inner join PlazosTB as p
 on c.Plazos = p.IdPlazos
 WHERE c.IdVenta = @IdVenta
 go
 
 create table CuentasHistorialClienteTB(
-	IdCuentasHistorialCliente int not null,
+	IdCuentasHistorialCliente int identity(1,1) not null,
 	IdCuentaClientes int not null,
 	Abono decimal(18,4) not null,
 	FechaAbono datetime not null,
 	Referencia varchar(120) null,
 	primary key(IdCuentasHistorialCliente,IdCuentaClientes)
 )
+go
+
+alter procedure Sp_Listar_CuentasHistorial_By_IdCuenta
+@IdCuentaClientes int
+as
+	select IdCuentasHistorialCliente,FechaAbono,Abono,Referencia from CuentasHistorialClienteTB where IdCuentaClientes = @IdCuentaClientes
 go

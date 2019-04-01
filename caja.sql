@@ -38,11 +38,10 @@ drop table CajaTrabajadorTB(
 
 select * from CajaTB
 select * from CajaTB  where Estado = 'activo'
-
 go
+
 truncate table CajaTB
 truncate table CajaTrabajadorTB
-
 go
 
 drop procedure Sp_Aperturar_Caja
@@ -86,6 +85,24 @@ create table CajaTB(
 )
 go
 
+Sp_ListarCajasAperturadas '2019-03-10','2019-03-24'
+go
+
+alter procedure Sp_ListarCajasAperturadas
+@FechaInicial varchar(30),
+@FechaFinal varchar(30)
+as
+	begin
+		select a.IdCaja,a.FechaApertura,a.FechaCierre,a.Estado,a.Contado,a.Calculado,a.Diferencia,e.Apellidos,e.Nombres 
+		from CajaTB as a inner join EmpleadoTB as e
+		on a.IdUsuario = e.IdEmpleado
+		where 
+		(@FechaInicial = '' and @FechaFinal = '' and a.FechaApertura is not null)
+		or
+		(cast(a.FechaRegistro as date) between @FechaInicial and @FechaFinal and a.FechaApertura is not null)
+	end
+go
+
 
 truncate table CajaTB
 go
@@ -93,6 +110,8 @@ truncate table MovimientoCajaTB
 go
 
 select * from CajaTB
+go
+select * from MovimientoCajaTB
 go
 
 create table MovimientoCajaTB(
