@@ -4,14 +4,13 @@ go
 select * from VentaTB
 go 
 
-truncate table  VentaTB
-go
 
 /*
 se agrega la columna moneda int
 se cambio al campo estado de tipo de dato de un varchar a un int
 cambio de la longitud del detalle de venta
 y quital algunos campos
+agregar tipo de venta
 */
 
 create table VentaTB(
@@ -28,6 +27,7 @@ create table VentaTB(
 	Descuento decimal(18,4) not null,
 	--Igv decimal(18,2) not null,
 	Total decimal(18,4) not null,
+	Tipo int not null,
 	Estado int null,
 	Observaciones varchar(200) null,
 	Efectivo decimal(18,4) not null,
@@ -55,8 +55,9 @@ if(@opcion = 1)
 		c.Apellidos + ' '+c.Nombres as Cliente,
 		td.Nombre as Comprobante,
 		v.Serie,v.Numeracion,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Abreviado,
+		m.Simbolo,
 		v.Total,
 		v.Observaciones
 		from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
@@ -79,8 +80,9 @@ else
 		c.Apellidos + ' '+c.Nombres as Cliente,
 		td.Nombre as Comprobante,
 		v.Serie,v.Numeracion,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Abreviado,
+		m.Simbolo,
 		v.Total,
 		v.Observaciones
 		from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
@@ -117,10 +119,14 @@ alter procedure Sp_Listar_Ventas_Detalle_By_Id
 @IdVenta varchar(12)
 as
 	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
-	d.IdArticulo,a.Clave,a.NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra, d.IdImpuesto,
-	d.Cantidad,d.PrecioVenta,d.Descuento,d.ValorImpuesto,d.ImpuestoSumado,d.Importe
-	 from DetalleVentaTB as d inner join ArticuloTB as a on d.IdArticulo = a.IdArticulo
-	 where d.IdVenta = @IdVenta
+	d.IdArticulo,a.Clave,a.NombreMarca,
+	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,
+	d.IdImpuesto,
+	d.Cantidad,d.PrecioVenta,
+	d.Descuento,d.ValorImpuesto,
+	d.ImpuestoSumado,d.Importe
+	from DetalleVentaTB as d inner join ArticuloTB as a on d.IdArticulo = a.IdArticulo
+	where d.IdVenta = @IdVenta
 go
 
 
@@ -185,14 +191,18 @@ truncate table ComprobanteTB
 go
 truncate table CuentasClienteTB
 go
+truncate table CuentasHistorialClienteTB
+go
 
 select * from VentaTB
 go
-select * from DetalleVentaTB 
+select * from DetalleVentaTB where IdVenta = 'VT0002'
 go
 select * from ComprobanteTB
 go
 select * from CuentasClienteTB
+go
+select * from CuentasHistorialClienteTB
 go
 
 
@@ -231,6 +241,8 @@ or
 order by v.FechaVenta desc
 go
 
+select * from ImpuestoTB
+go
 
 alter procedure Sp_Obtener_Venta_ById
 @idVenta varchar(12)
@@ -238,7 +250,9 @@ as
 	begin
 		select  v.FechaVenta,c.Apellidos,c.Nombres,t.Nombre as Comprobante,t.NombreImpresion,
 		v.Serie,v.Numeracion,v.Observaciones,
-		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,m.Simbolo,Efectivo,Vuelto
+		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
+		m.Simbolo,Efectivo,Vuelto
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
