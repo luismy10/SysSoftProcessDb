@@ -26,8 +26,8 @@ create table CompraTB
 	Total decimal(18,4) not null,
 	Observaciones varchar(300) null,
 	Notas varchar(300) null,
-	TipoCompra varchar(15) null,
-	EstadoCompra varchar(15) null
+	TipoCompra int null,
+	EstadoCompra int null
 )
 go 
 
@@ -35,23 +35,21 @@ select * from CompraTB
 
 exec Sp_Listar_Compras 0,'','','',''
 
-exec Sp_Listar_Compras 1,'','2019-01-01','2019-03-05',''
-
-exec Sp_Listar_Compras 2,'','2019-01-01','2019-03-05','pendiente'
-
-go
 alter procedure Sp_Listar_Compras
 @Opcion bigint,
 @Search varchar(100),
 @FechaInicial varchar(20),
 @FechaFinal varchar(20),
-@EstadoCompra varchar(15)
+@EstadoCompra int
 as
 	if(@Opcion = 0)
 		begin
 			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			CAST(c.FechaCompra as Date) as Fecha,c.Numeracion,
-			p.NumeroDocumento,p.RazonSocial, c.EstadoCompra,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
+			c.FechaCompra as Fecha,c.Numeracion,
+			p.NumeroDocumento,p.RazonSocial,
+			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
+			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
+			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
 			where (@Search = '')
@@ -63,8 +61,11 @@ as
 	else if(@Opcion = 1)
 		begin
 			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			CAST(c.FechaCompra as Date) as Fecha,c.Numeracion,
-			p.NumeroDocumento,p.RazonSocial, c.EstadoCompra,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
+			c.FechaCompra as Fecha,c.Numeracion,
+			p.NumeroDocumento,p.RazonSocial,
+			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
+			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
+			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
 			where (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal)
@@ -72,8 +73,11 @@ as
 	else if(@Opcion = 2)
 		begin
 			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			CAST(c.FechaCompra as Date) as Fecha,c.Numeracion,
-			p.NumeroDocumento,p.RazonSocial, c.EstadoCompra,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
+			c.FechaCompra as Fecha,c.Numeracion,
+			p.NumeroDocumento,p.RazonSocial,
+			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
+			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
+			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
 			where (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal) and c.EstadoCompra = @EstadoCompra
@@ -161,12 +165,13 @@ create table DetalleCompraTB
 	PrecioVenta1 decimal(18,4) null,
 	Margen1 tinyint null,
 	Utilidad1 decimal(18,4) null,
-	PrecioVenta2 decimal(18,4) null,
-	Margen2 tinyint null,
-	Utilidad2 decimal(18,4) null,
-	PrecioVenta3 decimal(18,4) null,
-	Margen3 tinyint null,
-	Utilidad3 decimal(18,4) null,
+
+	--PrecioVenta2 decimal(18,4) null,
+	--Margen2 tinyint null,
+	--Utilidad2 decimal(18,4) null,
+	--PrecioVenta3 decimal(18,4) null,
+	--Margen3 tinyint null,
+	--Utilidad3 decimal(18,4) null,
 
 	IdImpuesto int null,
 	NombreImpuesto varchar(12) null,
@@ -176,6 +181,7 @@ create table DetalleCompraTB
 	--MargenMayoreo tinyint null,
 	--UtilidadMayoreo decimal(18,2) null,
 	Importe decimal(18,4) not null,
+	Descripcion varchar(120) null,
 	PRIMARY KEY (IdCompra,IdArticulo)
 )
 go
@@ -194,7 +200,7 @@ go
 
 select * from CompraTB
 go
-select * from DetalleCompraTB
+select * from DetalleCompraTB 
 go
 select * from LoteTB
 go
@@ -224,6 +230,9 @@ go
 
 go
 
+select * from CompraTB
+go
+
 create procedure Sp_Listar_Detalle_Compra
 @IdCompra varchar(12)
 as
@@ -234,6 +243,7 @@ from DetalleCompraTB as d inner join ArticuloTB as a
 on d.IdArticulo = a.IdArticulo
 where d.IdCompra = @IdCompra
 go
+
 
 -- Borrado TipoLote, FechaFabricacion (15/02/19)
 
@@ -257,6 +267,21 @@ CREATE TABLE LoteTB (
   --KEY `fk_lote_venta1` (`ven_id`),
   --KEY `fk_lote_notaCredito1` (`ncr_id`)
 )
+go
+
+select * from DetalleTB where IdMantenimiento = '0009'
+go
+
+alter procedure Sp_Obtener_Compra_ById
+@IdCompra varchar(12)
+as
+	select c.FechaCompra as Fecha, c.Comprobante, c.Numeracion,
+	dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,
+	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
+	dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
+	c.Total,c.Observaciones,c.Notas,td.Nombre 
+	from CompraTB as c inner join TipoDocumentoTB as td on c.Comprobante=td.IdTipoDocumento 
+	where c.IdCompra = @IdCompra
 go
 
 alter procedure Sp_Listar_Lote

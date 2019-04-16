@@ -40,10 +40,6 @@ select * from CajaTB
 select * from CajaTB  where Estado = 'activo'
 go
 
-truncate table CajaTB
-truncate table CajaTrabajadorTB
-go
-
 drop procedure Sp_Aperturar_Caja
 @IdCajaTrabajador int,
 @MontoInicial decimal(18,2),

@@ -47,7 +47,7 @@ as
 	end
 go
 
-select * from DetalleTB
+select * from DetalleTB order by IdMantenimiento asc
 go
 
 
