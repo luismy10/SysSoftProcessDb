@@ -81,7 +81,7 @@ create table CajaTB(
 )
 go
 
-Sp_ListarCajasAperturadas '2019-03-10','2019-03-24'
+Sp_ListarCajasAperturadas '2019-04-17','2019-04-17'
 go
 
 alter procedure Sp_ListarCajasAperturadas

@@ -36,7 +36,10 @@ create table VentaTB(
 )
 go
 
-Sp_Listar_Ventas ''
+select * from EmpleadoTB
+go
+
+Sp_Listar_Ventas '',
 GO
 
 alter procedure Sp_Listar_Ventas
@@ -45,7 +48,8 @@ alter procedure Sp_Listar_Ventas
 @FechaInicial varchar(20),
 @FechaFinal varchar(20),
 @Comprobante int,
-@Estado int
+@Estado int,
+@Vendedor varchar(12)
 as
 if(@opcion = 1)
 	begin
@@ -64,12 +68,12 @@ if(@opcion = 1)
 		inner join TipoDocumentoTB as td on v.Comprobante = IdTipoDocumento
 		inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		where 
-		(@search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) )
-		OR (@search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' )
+		(Vendedor = @Vendedor and @search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) )
+		OR (Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' )
 		OR (
-			(@search <> '' AND CONCAT(c.Apellidos,'',c.Nombres) LIKE @search+'%')
+			(Vendedor = @Vendedor and @search <> '' AND CONCAT(c.Apellidos,'',c.Nombres) LIKE @search+'%')
 			OR
-			(@search <> '' AND CONCAT(c.Nombres,' ',c.Apellidos) LIKE @search+'%')
+			(Vendedor = @Vendedor and @search <> '' AND CONCAT(c.Nombres,' ',c.Apellidos) LIKE @search+'%')
 		)
 	end
 else
@@ -89,19 +93,19 @@ else
 		inner join TipoDocumentoTB as td on v.Comprobante = td.IdTipoDocumento
 		inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		where 
-		(
+		(Vendedor = @Vendedor and
 			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0
 		)
 		OR
-		(
+		(Vendedor = @Vendedor and
 			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado
 		)
 		OR
-		(
+		(Vendedor = @Vendedor and
 			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0
 		)
 		OR
-		(
+		(Vendedor = @Vendedor and
 			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado
 		)
 	end
@@ -114,15 +118,17 @@ from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 where v.IdVenta = ?
 go
 
+select * from ArticuloTB
+go
 
 alter procedure Sp_Listar_Ventas_Detalle_By_Id 
 @IdVenta varchar(12)
 as
 	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
-	d.IdArticulo,a.Clave,a.NombreMarca,
+	d.IdArticulo,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,
 	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,
 	d.IdImpuesto,
-	d.Cantidad,d.PrecioVenta,
+	d.Cantidad,d.CantidadGranel,d.PrecioVenta,
 	d.Descuento,d.ValorImpuesto,
 	d.ImpuestoSumado,d.Importe
 	from DetalleVentaTB as d inner join ArticuloTB as a on d.IdArticulo = a.IdArticulo
@@ -196,7 +202,7 @@ go
 
 select * from VentaTB
 go
-select * from DetalleVentaTB where IdVenta = 'VT0002'
+select * from DetalleVentaTB where IdVenta = 'VT0005'
 go
 select * from ComprobanteTB
 go
