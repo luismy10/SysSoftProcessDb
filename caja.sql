@@ -1,4 +1,4 @@
-use [PuntoVentaSysSoftDB]
+use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 /*
@@ -107,8 +107,9 @@ go
 
 select * from CajaTB
 go
-select * from MovimientoCajaTB
+  where IdCaja = 2
 go
+
 
 create table MovimientoCajaTB(
 	IdMovimientoCaja int identity(1,1) not null,
@@ -126,3 +127,12 @@ go
 
 SELECT * FROM MovimientoCajaTB
 GO
+
+alter procedure Sp_Lista_Movimiento_Caja_ById
+@IdCaja int
+as
+	begin
+		select m.FechaMovimiento,m.Comentario,m.Movimiento,m.Entrada,m.Salidas
+		 from MovimientoCajaTB as m where IdCaja = @IdCaja order by m.FechaMovimiento asc
+	end
+go

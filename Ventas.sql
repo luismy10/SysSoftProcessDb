@@ -1,4 +1,4 @@
-use PuntoVentaSysSoftDB
+use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 select * from VentaTB
@@ -259,7 +259,7 @@ as
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Simbolo,Efectivo,Vuelto
+		m.Simbolo,v.Efectivo,v.Vuelto,v.Total
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
