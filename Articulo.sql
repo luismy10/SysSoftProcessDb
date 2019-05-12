@@ -338,8 +338,19 @@ go
 select * from MantenimientoTB
 go
 
-select * from ArticuloTB
+select NombreMarca from ArticuloTB
 go
+
+execute sp_helpindex 'ArticuloTB'
+go
+
+create nonclustered index INONCLUS_ARTICULO_CLAVE
+on ArticuloTB(Clave)
+go
+create nonclustered index INONCLUS_ARTICULO_NOMBRE_MARCA
+on ArticuloTB(NombreMarca)
+go
+
 
 alter procedure Sp_Listar_Articulo_Lista_View
 @search varchar(100)
@@ -367,8 +378,8 @@ as
 	begin
 		select IdArticulo,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') as Presentacion ,
-		Cantidad,PrecioVentaGeneral,
-		UnidadVenta,Lote,Inventario,Impuesto
+		Cantidad,PrecioCompra,PrecioVentaGeneral,
+		UnidadVenta,Lote,Inventario,Impuesto,ValorInventario
 		from ArticuloTB 
 		where Clave = @search
 	end
