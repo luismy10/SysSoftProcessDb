@@ -1,4 +1,4 @@
-use PuntoVentaSysSoftDB
+use PuntoVentaSysSoftDBDesarrollo
 go
 
 create table TipoTicketTB(
@@ -24,4 +24,6 @@ go
 
 select * from TicketTB
 go
+
+
 
