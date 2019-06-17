@@ -60,7 +60,7 @@ from EtiquetaTB as et inner join TipoEtiquetaTB as td
 on et.tipo = td.idTipoEtiqueta
 go
 
-alter procedure Sp_Listar_Etiquetas_By_Type
+create procedure Sp_Listar_Etiquetas_By_Type
 @type int
 as
 	begin
