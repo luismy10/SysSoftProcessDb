@@ -202,7 +202,7 @@ go
 
 select * from VentaTB
 go
-select * from DetalleVentaTB where IdVenta = 'VT0005'
+select * from DetalleVentaTB
 go
 select * from ComprobanteTB
 go
