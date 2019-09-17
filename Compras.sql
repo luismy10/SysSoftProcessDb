@@ -18,7 +18,8 @@ create table CompraTB
 	Comprobante int null,
 	Numeracion varchar(20) null,
 	TipoMoneda int not null,
-	FechaCompra datetime not null,
+	Fecha date not null,
+	Hora time not null,
 	SubTotal decimal(18,4) not null,
 	--Gravada decimal(18,2) not null,
 	Descuento decimal(18,4) null,
@@ -27,62 +28,41 @@ create table CompraTB
 	Observaciones varchar(300) null,
 	Notas varchar(300) null,
 	TipoCompra int null,
-	EstadoCompra int null
+	EstadoCompra int null,
+	Usuario varchar(12) not null
 )
 go 
 
 select * from CompraTB
+go
 
-exec Sp_Listar_Compras 0,'','','',''
+exec Sp_Listar_Compras 1,'','26/08/2019','26/08/2019',0
+go
 
-alter procedure Sp_Listar_Compras
+ALTER procedure [dbo].[Sp_Listar_Compras]
 @Opcion bigint,
 @Search varchar(100),
 @FechaInicial varchar(20),
 @FechaFinal varchar(20),
 @EstadoCompra int
 as
-	if(@Opcion = 0)
-		begin
-			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			c.FechaCompra as Fecha,c.Numeracion,
+select ROW_NUMBER() over( order by c.Fecha desc) as Filas,c.IdCompra,p.IdProveedor,
+			c.Fecha,c.Hora,c.Numeracion,
 			p.NumeroDocumento,p.RazonSocial,
 			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
 			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
 			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
-			where (@Search = '')
-			or (c.Numeracion like @Search+'%') 
-			or (p.NumeroDocumento like @Search+'%') 
-			or (p.RazonSocial like '%'+@Search+'%')
-		end
+			where (@Search = '' and @Opcion = 0)
+				or (c.Numeracion like @Search+'%' and @Opcion = 0) 
+				or (p.NumeroDocumento like @Search+'%' and @Opcion = 0) 
+				or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0)
 
-	else if(@Opcion = 1)
-		begin
-			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			c.FechaCompra as Fecha,c.Numeracion,
-			p.NumeroDocumento,p.RazonSocial,
-			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
-			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
-			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
-			from CompraTB as c inner join ProveedorTB as p
-			on c.Proveedor = p.IdProveedor
-			where (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal)
-		end
-	else if(@Opcion = 2)
-		begin
-			select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			c.FechaCompra as Fecha,c.Numeracion,
-			p.NumeroDocumento,p.RazonSocial,
-			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
-			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
-			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
-			from CompraTB as c inner join ProveedorTB as p
-			on c.Proveedor = p.IdProveedor
-			where (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal) and c.EstadoCompra = @EstadoCompra
-		end
-		
+				or (CAST(c.Fecha as Date) BETWEEN @FechaInicial and @FechaFinal and @Opcion = 1)
+
+				or (CAST(c.Fecha as Date) BETWEEN @FechaInicial and @FechaFinal and c.EstadoCompra = @EstadoCompra and @Opcion = 2) 
+
 go
 
 
@@ -194,7 +174,9 @@ truncate table DetalleCompraTB
 go
 truncate table LoteTB
 go
-truncate table PagoProveedoresTB
+truncate table CuentasProveedorTB
+go
+truncate table CuentasHistorialProveedorTB
 go
 
 
@@ -204,9 +186,11 @@ select * from DetalleCompraTB
 go
 select * from LoteTB
 go
-select * from  PagoProveedoresTB
+select * from CuentasProveedorTB
 go
-select * from  PlazosTB
+select * from CuentasHistorialProveedorTB
+go
+select * from PlazosTB
 go
 
 
@@ -233,15 +217,15 @@ go
 select * from CompraTB
 go
 
-create procedure Sp_Listar_Detalle_Compra
+ALTER procedure [dbo].[Sp_Listar_Detalle_Compra]
 @IdCompra varchar(12)
 as
 select 
-a.Clave,a.NombreMarca,d.Cantidad,a.UnidadVenta,dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra ,
-d.PrecioCompra,d.Descuento,d.IdImpuesto,d.ValorImpuesto,d.ImpuestoSumado,d.Importe
-from DetalleCompraTB as d inner join ArticuloTB as a
-on d.IdArticulo = a.IdArticulo
+s.Clave,s.NombreMarca,d.Cantidad,s.UnidadVenta,dbo.Fc_Obtener_Nombre_Detalle(s.UnidadCompra,'0013') as UnidadCompra ,d.PrecioCompra,d.Descuento,d.IdImpuesto,d.ValorImpuesto,d.ImpuestoSumado,d.Importe
+from DetalleCompraTB as d inner join SuministroTB as s
+on d.IdArticulo = s.IdSuministro
 where d.IdCompra = @IdCompra
+
 go
 
 
@@ -272,13 +256,13 @@ go
 select * from DetalleTB where IdMantenimiento = '0009'
 go
 
-alter procedure Sp_Obtener_Compra_ById
+ALTER procedure Sp_Obtener_Compra_ById
 @IdCompra varchar(12)
 as
-	select c.FechaCompra as Fecha, c.Comprobante, c.Numeracion,
+	select c.Fecha, c.Hora,c.Comprobante, c.Numeracion,
 	dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,
-	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
-	dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
+	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') as Tipo,
+	dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') as Estado,
 	c.Total,c.Observaciones,c.Notas,td.Nombre 
 	from CompraTB as c inner join TipoDocumentoTB as td on c.Comprobante=td.IdTipoDocumento 
 	where c.IdCompra = @IdCompra
@@ -316,24 +300,43 @@ else if(@opcion = 2)
 GO
 
 
-/*
- Agregado Tabla CuentasCobrarProveedoresTB 01/03/19
-*/
-create table PagoProveedoresTB(
-	IdPagoProveedores int primary key identity(1,1) not null,
-	MontoTotal decimal(18,4) null,
-	MontoActual decimal(18,4) null,
-	CuotaTotal int null,
-	CuotaActual int null,
-	Plazos varchar(12) null,
-	FechaInicial dateTime null,
-	FechaActual datetime null,
-	FechaFinal datetime null,
-	Observacion varchar(30) null,
-	Estado varchar(12) null,
-	IdProveedor varchar(12) null,
-	IdCompra varchar(12) null	
+
+create table CuentasProveedorTB(
+	IdCompra varchar(12) not null,
+	IdCuentasProveedor int identity not null,
+	MontoTotal decimal(18,4) not null,
+	Plazos int not null,
+	FechaPago date not null,
+	FechaRegistro date not null,
+	primary key(IdCompra,IdCuentasProveedor)
 )
+go
+
+ALTER procedure Sp_Get_Cuentas_Proveedor_By_IdCompra
+@idCompra varchar(12)
+as
+	begin
+		select IdCuentasProveedor,MontoTotal,
+		dbo.Fc_Obtener_Datos_Plazos(Plazos) as Plazos,
+		FechaPago,FechaRegistro
+		from CuentasProveedorTB where IdCompra = @idCompra
+	end
+go
+
+create table CuentasHistorialProveedorTB(
+	IdCuentasHistorialProveedor int identity not null,
+	IdCuentasProveedor int not null,
+	Monto decimal(18,4),
+	Cuota int,
+	Fecha date,
+	Hora time,
+	Observacion varchar(120),
+	Estado tinyint,
+	Usuario varchar(12),
+	primary key(IdCuentasHistorialProveedor)
+)
+go
+
 
 /*
  Agregado Tabla PlazosTB 02/03/19
@@ -348,3 +351,22 @@ create table PlazosTB(
 
 go
 
+
+ALTER function Fc_Obtener_Datos_Plazos
+(
+@IdPlazos int
+) returns varchar(15)
+as
+	begin
+		declare @datos varchar(15)
+		if exists(select Nombre from PlazosTB where IdPlazos = @IdPlazos)
+			begin
+				set @datos= (select Nombre from PlazosTB where IdPlazos = @IdPlazos)
+			end
+		else 
+			begin
+				set @datos= 'DATOS NO ENCONTRADOS'
+			end
+		return @datos
+	end
+go

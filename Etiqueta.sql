@@ -46,9 +46,6 @@ create table EtiquetaTB(
 )
 go
 
-TRUNCATE TABLE EtiquetaTB
-GO
-
 SELECT  * FROM EtiquetaTB
 GO
 
