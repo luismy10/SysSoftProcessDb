@@ -1,7 +1,7 @@
 CREATE DATABASE PuntoVentaSysSoftDB
 GO
 
-USE PuntoVentaSysSoftDB
+USE PuntoVentaSysSoftDBDesarrollo
 go
 
 --declare @count INT =40254;
@@ -17,8 +17,15 @@ go
 truncate table MantenimientoTB
 go
 
-select * from MantenimientoTB
+select * from MantenimientoTB 
 go
+
+UPDATE  MantenimientoTB SET Estado = 0 WHERE IdMantenimiento = '0016'
+GO
+
+select * from DetalleTB order by IdMantenimiento desc
+go
+
 
 /*
 Se agrego un nuevo campo de validar

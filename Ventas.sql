@@ -152,17 +152,15 @@ go
 print dbo.Fc_Venta_Codigo_Alfanumerico()
 go
 
-alter function Fc_Venta_Codigo_Alfanumerico ()  returns varchar(12)
+ALTER function [dbo].[Fc_Venta_Codigo_Alfanumerico] ()  returns varchar(12)
 	as
 		begin
-		declare @Length int,@Incremental int,@ValorActual varchar(12),@ValorNuevo varchar(12),@CodGenerado varchar(12)
+		declare @Incremental int,@ValorActual varchar(12),@CodGenerado varchar(12)
 			begin
 				if EXISTS(select IdVenta from VentaTB)
 					begin					
-						set @ValorActual = (select MAX(IdVenta) from VentaTB)
-						set @Length = LEN(@ValorActual)
-						set @ValorNuevo = SUBSTRING(@ValorActual,3,@Length-2)
-						set @Incremental = CONVERT(INT,@ValorNuevo) +1
+						set @ValorActual = (select MAX(CAST(REPLACE(REPLACE(IdVenta,'VT',''),'','')AS INT)) from VentaTB)
+						set @Incremental = CONVERT(INT,@ValorActual) +1
 						if(@Incremental <= 9)
 							begin
 								set @CodGenerado = 'VT000'+CONVERT(VARCHAR,@Incremental)
@@ -202,7 +200,7 @@ go
 
 select * from VentaTB
 go
-select * from DetalleVentaTB
+select * from DetalleVentaTB 
 go
 select * from ComprobanteTB
 go
@@ -216,8 +214,11 @@ create table DetalleVentaTB(
 	IdVenta varchar(12) not null,
 	IdArticulo varchar(12) not null,
 	Cantidad decimal(18,4) not null,
+	CantidadGranel decimal(18,4) not null,
 	CostoVenta decimal(18,4) not null,
+	CostoVentaGranel decimal(18,4) not null,
 	PrecioVenta decimal(18, 4) not null,
+	PrecioVentaGranel decimal(18,4) not null,
 	Descuento decimal(18, 4) null,
 
 	IdImpuesto int null,
