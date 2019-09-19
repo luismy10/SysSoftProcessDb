@@ -93,12 +93,14 @@ create table PreciosTB
 (
 	IdPrecios int identity not null,
 	IdArticulo varchar(12) not null,
+	IdSuministro varchar(12) not null,
 	Nombre varchar(30) not null,
-
-	primary key(IdPrecios,IdArticulo)
+	Valor decimal(18,4) not null
+	primary key(IdPrecios)
 )
 go
 
+}
 /*
 este procedimiento procedimiento
 0almacenado esta en
