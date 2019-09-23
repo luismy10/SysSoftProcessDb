@@ -50,12 +50,16 @@ as
 		UnidadCompra,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
 		UnidadVenta,
 		StockMinimo,StockMaximo,Cantidad,PrecioCompra,PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,
-		Estado,Lote,Inventario,Imagen,
-		Impuesto,dbo.Fc_Obtener_Nombre_Impuesto(Impuesto) as ImpuestoNombre
+		Estado,Lote,Inventario,ValorInventario,Imagen,
+		Impuesto,dbo.Fc_Obtener_Nombre_Impuesto(Impuesto) as ImpuestoNombre,
+		ClaveSat
 		from SuministroTB
 		where IdSuministro=@IdSuministro or Clave = @IdSuministro
 	end
 go
+
+SELECT * FROM SuministroTB
+GO
 
 alter procedure Sp_Listar_Suministros_Lista_View 
 @search varchar(100)
@@ -73,6 +77,18 @@ as
 		(ClaveAlterna = @search and Estado = 1)
 		or
 		(NombreMarca like @search +'%' and Estado = 1)
+	end
+go
+
+create procedure Sp_Listar_Detalle_Compra_By_IdCompra
+@IdCompra varchar(12)
+as
+	begin
+		SELECT s.IdSuministro,s.Clave,s.NombreMarca,s.Cantidad,dbo.Fc_Obtener_Nombre_Detalle(s.UnidadCompra,'0013') as UnidadCompraNombre,
+		s.PrecioCompra,s.PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(s.Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(s.Estado,'0001') as Estado,
+		s.Inventario,s.ValorInventario 
+		FROM DetalleCompraTB as d INNER JOIN SuministroTB AS s ON d.IdArticulo = s.IdSuministro 
+		WHERE d.IdCompra = @IdCompra
 	end
 go
 
@@ -157,6 +173,8 @@ create function [dbo].[Fc_Suministro_Codigo_Alfanumerico] ()  returns varchar(12
 		end
 go
 
+
+
 create table KardexSuministroTB
 (
 	IdKardex int identity(1,1) not null,
@@ -197,12 +215,18 @@ go
 truncate table KardexSuministroTB
 go
 
+truncate table PreciosTB
+go
+
+update SuministroTB set ValorInventario = 0 where IdSuministro = 'SM0007'
+go
+
 select * from SuministroTB
 go
-
 select * from KardexSuministroTB
 go
-
+select * from PreciosTB
+go
 
 create table TipoMovimientoTB
 (

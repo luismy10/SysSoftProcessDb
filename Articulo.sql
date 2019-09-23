@@ -82,6 +82,8 @@ GO
 
 select * from ArticuloTB
 go
+select * from KardexArticuloTB
+go
 
 UPDATE ArticuloTB SET Origen = 0
 

@@ -134,6 +134,9 @@ go
 
 */
 
+select * from DetalleCompraTB
+go
+
 create table DetalleCompraTB 
 (
 	IdCompra varchar(12) not null,
@@ -191,6 +194,23 @@ go
 select * from CuentasHistorialProveedorTB
 go
 select * from PlazosTB
+go
+
+
+Sp_Listar_Compras_For_Movimiento '','2019-09-15', 1
+
+alter procedure Sp_Listar_Compras_For_Movimiento 
+@Search varchar(120),
+@fecha varchar(20),
+@Opcion tinyint
+as
+	select c.IdCompra,c.Fecha,c.Hora,c.Numeracion,p.RazonSocial,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total from CompraTB as c inner join ProveedorTB as p on c.Proveedor = p.IdProveedor
+	where 
+	(@Search = '' and @fecha = '')
+	or (c.Numeracion like @Search+'%' and @Opcion = 0) 
+	or (p.NumeroDocumento like @Search+'%' and @Opcion = 0) 
+	or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0)
+	or (cast(c.Fecha as date) = @fecha and @Opcion = 1)
 go
 
 
