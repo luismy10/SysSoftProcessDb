@@ -39,6 +39,20 @@ go
 exec Sp_Listar_Compras 1,'','26/08/2019','26/08/2019',0
 go
 
+select * from CompraTB where IdCompra = 'CP0001' and EstadoCompra = 3
+go
+
+select IdCompra,Proveedor,dbo.Fc_Obtener_Datos_Proveedor(Proveedor) as DatosProveedor,Fecha,Comprobante,Numeracion,TipoMoneda,Observaciones,Notas from CompraTB
+go
+
+
+SELECT * FROM CompraTB WHERE IdCompra = 'CP0001' AND EstadoCompra = 3
+go
+
+select d.IdArticulo,s.Clave,s.NombreMarca,d.Cantidad,d.PrecioCompra,d.Descuento,d.Importe,d.Descripcion from DetalleCompraTB as d inner join SuministroTB as s on d.IdArticulo = s.IdSuministro
+ where d.IdCompra = 'CP0001'
+go
+
 ALTER procedure [dbo].[Sp_Listar_Compras]
 @Opcion bigint,
 @Search varchar(100),
@@ -62,7 +76,8 @@ select ROW_NUMBER() over( order by c.Fecha desc) as Filas,c.IdCompra,p.IdProveed
 				or (CAST(c.Fecha as Date) BETWEEN @FechaInicial and @FechaFinal and @Opcion = 1)
 
 				or (CAST(c.Fecha as Date) BETWEEN @FechaInicial and @FechaFinal and c.EstadoCompra = @EstadoCompra and @Opcion = 2) 
-
+	order by c.Fecha desc ,
+	c.Hora desc
 go
 
 
@@ -185,7 +200,7 @@ go
 
 select * from CompraTB
 go
-select * from DetalleCompraTB 
+select * from DetalleCompraTB where IdCompra = 'CP0007'
 go
 select * from LoteTB
 go
@@ -199,7 +214,7 @@ go
 
 Sp_Listar_Compras_For_Movimiento '','2019-09-15', 1
 
-alter procedure Sp_Listar_Compras_For_Movimiento 
+ALTER procedure [dbo].[Sp_Listar_Compras_For_Movimiento] 
 @Search varchar(120),
 @fecha varchar(20),
 @Opcion tinyint
@@ -211,6 +226,7 @@ as
 	or (p.NumeroDocumento like @Search+'%' and @Opcion = 0) 
 	or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0)
 	or (cast(c.Fecha as date) = @fecha and @Opcion = 1)
+	order by c.Fecha desc,c.Hora desc
 go
 
 
@@ -240,7 +256,7 @@ go
 ALTER procedure [dbo].[Sp_Listar_Detalle_Compra]
 @IdCompra varchar(12)
 as
-select 
+select s.IdSuministro,
 s.Clave,s.NombreMarca,d.Cantidad,s.UnidadVenta,dbo.Fc_Obtener_Nombre_Detalle(s.UnidadCompra,'0013') as UnidadCompra ,d.PrecioCompra,d.Descuento,d.IdImpuesto,d.ValorImpuesto,d.ImpuestoSumado,d.Importe
 from DetalleCompraTB as d inner join SuministroTB as s
 on d.IdArticulo = s.IdSuministro
@@ -288,38 +304,25 @@ as
 	where c.IdCompra = @IdCompra
 go
 
+select * from LoteTB
+go
+
 alter procedure Sp_Listar_Lote
 @opcion bigint,
 @search varchar(60)
 as
-if(@opcion = 0)
-	begin
-		select ROW_NUMBER() over( order by lo.IdLote desc) as Filas, lo.IdLote,lo.NumeroLote,ar.Clave,ar.NombreMarca,lo.FechaCaducidad,lo.ExistenciaInicial,lo.ExistenciaActual
-		from LoteTB as lo inner join ArticuloTB as ar
-		on lo.IdArticulo = ar.IdArticulo
-		where (@search = '')
-		 or (lo.NumeroLote like @search+'%') 
-		 or (ar.Clave like @search+'%') 
-		 or (ar.NombreMarca like '%'+@search+'%')
-	end
-else if(@opcion = 1)
-	
-	begin
-		select ROW_NUMBER() over( order by lo.IdLote desc) as Filas, lo.IdLote,lo.NumeroLote,ar.Clave,ar.NombreMarca,lo.FechaCaducidad,lo.ExistenciaInicial,lo.ExistenciaActual
-		from LoteTB as lo inner join ArticuloTB as ar
-		on lo.IdArticulo = ar.IdArticulo
-		where GETDATE() <= lo.FechaCaducidad and DATEDIFF(day, GETDATE(), lo.FechaCaducidad)<=15 order by lo.FechaCaducidad asc 
-	end
-else if(@opcion = 2)
-	begin
-		select ROW_NUMBER() over( order by lo.IdLote desc) as Filas, lo.IdLote,lo.NumeroLote,ar.Clave,ar.NombreMarca,lo.FechaCaducidad,lo.ExistenciaInicial,lo.ExistenciaActual
-		from LoteTB as lo inner join ArticuloTB as ar
-		on lo.IdArticulo = ar.IdArticulo
-		where lo.FechaCaducidad <= CAST(GETDATE() AS DATE) order by lo.FechaCaducidad desc
-	end
+select ROW_NUMBER() over( order by lo.IdLote desc) as Filas, lo.IdLote,lo.NumeroLote,ar.Clave,ar.NombreMarca,lo.FechaCaducidad,lo.ExistenciaInicial,lo.ExistenciaActual
+		from LoteTB as lo inner join SuministroTB as ar
+		on lo.IdArticulo = ar.IdSuministro
+		where (@search = '' and @opcion = 0)
+		 or (lo.NumeroLote like @search+'%' and @opcion = 0) 
+		 or (ar.Clave like @search+'%' and @opcion = 0) 
+		 or (ar.NombreMarca like '%'+@search+'%' and @opcion = 0)
+		 or (GETDATE() <= lo.FechaCaducidad and DATEDIFF(day, GETDATE(), lo.FechaCaducidad)<=15 and @opcion = 1)
+		 or	(lo.FechaCaducidad <= CAST(GETDATE() AS DATE) and @opcion = 2)
+				 
+		 order by lo.FechaCaducidad asc 
 GO
-
-
 
 create table CuentasProveedorTB(
 	IdCompra varchar(12) not null,

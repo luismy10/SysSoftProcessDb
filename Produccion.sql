@@ -92,18 +92,19 @@ as
 	end
 go
 
-alter procedure Sp_Listar_Suministros
+ALTER procedure [dbo].[Sp_Listar_Suministros]
 @Opcion tinyint,
 @Clave varchar(45),
 @NombreMarca varchar(120)
 as
 	begin
-		select IdSuministro,Clave,NombreMarca,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
-		PrecioCompra,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
+		select IdSuministro,Clave,ClaveAlterna,NombreMarca,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+		PrecioCompra,Impuesto,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
 		Inventario,ValorInventario 
 		from SuministroTB
 		where (@Opcion = 0) 
 		or (Clave like @Clave+'%' and @Opcion = 1) 
+		or (ClaveAlterna like @Clave+'%' and @Opcion = 1)
 		or (NombreMarca like @NombreMarca+'%' and @Opcion = 2)
 		or (
 			(Clave like @NombreMarca+'%' and @Opcion = 3)
@@ -206,16 +207,20 @@ WHERE
 	order by k.Fecha,k.Hora asc
 GO
 
-Sp_Listar_Kardex_Suministro_By_Id 'SM0001'
-go
 
 truncate table SuministroTB
 go
-
 truncate table KardexSuministroTB
 go
-
 truncate table PreciosTB
+go
+truncate table MovimientoInventarioTB
+go
+truncate table MovimientoInventarioDetalleTB
+go
+truncate table AsignacionTB
+go
+truncate table AsignacionDetalleTB
 go
 
 update SuministroTB set ValorInventario = 0 where IdSuministro = 'SM0007'
@@ -226,6 +231,10 @@ go
 select * from KardexSuministroTB
 go
 select * from PreciosTB
+go
+select * from MovimientoInventarioTB
+go
+select * from MovimientoInventarioDetalleTB
 go
 
 create table TipoMovimientoTB
@@ -291,14 +300,6 @@ create table MovimientoInventarioDetalleTB
 )
 go
 
-
-truncate table MovimientoInventarioTB
-go
-
-truncate table MovimientoInventarioDetalleTB
-go
-
-
 select  *from MovimientoInventarioTB
 go
 
@@ -307,8 +308,15 @@ go
 
 go
 
+select * from MovimientoInventarioTB
+go
+
+Sp_Listar_Movimiento_Inventario 1,2,'2019-09-28','2019-09-28'
+go
+
 alter procedure Sp_Listar_Movimiento_Inventario
-@opcion bit,
+@init bit,
+@opcion tinyint,
 @movimiento int,
 @fechaInicial varchar(50),
 @fechaFinal varchar(50)
@@ -332,6 +340,8 @@ as
 	where 
 	(
 		(
+		 (@opcion = 1 and @init = 0)
+		 or
 		 (@opcion = 1 and mv.Fecha between cast(@fechaInicial as date) and cast(@fechaFinal as date) and @movimiento = 0)
 		 or
 		 (@opcion = 1 and mv.Fecha between cast(@fechaInicial as date) and cast(@fechaFinal as date) and mv.TipoMovimiento = @movimiento)
@@ -340,12 +350,17 @@ as
 	or
 	(
 		(
-		(@opcion = 0 and Articulo = 1 and mv.Fecha between cast(@fechaInicial as date) and cast(@fechaFinal as date) and @movimiento = 0)
+		(@opcion = 2 and mv.Articulo = 1 and @init = 0)
 		or
-		(@opcion = 0 and Articulo = 1 and mv.Fecha between cast(@fechaInicial as date) and cast(@fechaFinal as date) and mv.TipoMovimiento = @movimiento)
+		(@opcion = 2 and mv.Articulo = 1 and mv.Fecha between cast(@fechaInicial as date) and cast(@fechaFinal as date) and @movimiento = 0)
+		or
+		(@opcion = 2 and mv.Articulo = 1 and mv.Fecha between cast(@fechaInicial as date) and cast(@fechaFinal as date) and mv.TipoMovimiento = @movimiento)
 		)
 	)
-	order by mv.Fecha,mv.Hora desc
+	order by mv.Fecha desc,mv.Hora desc
+go
+
+select * from MovimientoInventarioTB
 go
 
 create procedure Sp_Get_Movimiento_Inventario_By_Id
@@ -403,11 +418,7 @@ create table AsignacionDetalleTB(
 )
 go
 
-truncate table AsignacionTB
-go
 
-truncate table AsignacionDetalleTB
-go
 
 
 select * from AsignacionTB

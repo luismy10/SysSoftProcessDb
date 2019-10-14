@@ -79,13 +79,20 @@ TRUNCATE TABLE ArticuloTB
 GO
 TRUNCATE TABLE KardexArticuloTB
 GO
+TRUNCATE TABLE PreciosTB
+GO
 
 select * from ArticuloTB
 go
 select * from KardexArticuloTB
 go
+select * from PreciosTB
+go
 
-UPDATE ArticuloTB SET Origen = 0
+update ArticuloTB set ArticuloTB.IdSuministro = SuministroTB.IdSuministro
+from SuministroTB,ArticuloTB
+where SuministroTB.Clave = ArticuloTB.Clave
+go
 
 SELECT * FROM KardexArticuloTB
 GO
@@ -262,16 +269,20 @@ go
 	Eliminado campo CantidadGranel 21/02/19
 	Actualizado Campo PrecioVenta a PrecioVenta1 21/02/19
 */
+[dbo].[Sp_Listar_Articulo] 0,'',0
+go
+
 ALTER procedure [dbo].[Sp_Listar_Articulo]
 @option tinyint,
 @search varchar(100),
 @categoria int
 as
 	begin	
-			select IdArticulo,Clave,NombreMarca,NombreGenerico,
+			select IdArticulo,Clave,ClaveAlterna,NombreMarca,NombreGenerico,
 			dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 			Cantidad,
 			PrecioVentaGeneral,
+			Impuesto,
 			dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
 			UnidadVenta,
 			dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,
@@ -286,9 +297,38 @@ as
 				OR 
 				(ClaveAlterna = @search AND @option = 3)
 			   )
+			  
 	end
+go
+
+alter procedure Sp_Listar_Articulo_Paginacion
+@paginacion int
+as
+	begin	
+			select IdArticulo,Clave,ClaveAlterna,NombreMarca,NombreGenerico,
+			dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+			Cantidad,
+			PrecioVentaGeneral,
+			Impuesto,
+			dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+			UnidadVenta,
+			dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,
+			dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
+			Imagen	
+			from ArticuloTB 
+			
+			   order by IdArticulo asc
+			   offset @paginacion rows fetch next 10 rows only
+	end
+go
 
 
+select * from ArticuloTB 
+go
+
+select * from ArticuloTB 
+ORDER BY IdArticulo ASC
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
 go
 
 create procedure Sp_Listar_Articulo_Movimiento

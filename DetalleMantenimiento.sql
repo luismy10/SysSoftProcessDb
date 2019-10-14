@@ -17,13 +17,13 @@ go
 truncate table MantenimientoTB
 go
 
-select * from MantenimientoTB 
+select * from MantenimientoTB  WHERE IdMantenimiento = '0009'
 go
 
-UPDATE  MantenimientoTB SET Estado = 0 WHERE IdMantenimiento = '0016'
+UPDATE  MantenimientoTB SET Estado = 0 WHERE IdMantenimiento = '0009'
 GO
 
-select * from DetalleTB order by IdMantenimiento desc
+select * from DetalleTB WHERE IdMantenimiento = ''
 go
 
 
