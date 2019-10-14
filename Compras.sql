@@ -221,11 +221,11 @@ ALTER procedure [dbo].[Sp_Listar_Compras_For_Movimiento]
 as
 	select c.IdCompra,c.Fecha,c.Hora,c.Numeracion,p.RazonSocial,dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total from CompraTB as c inner join ProveedorTB as p on c.Proveedor = p.IdProveedor
 	where 
-	(@Search = '' and @fecha = '')
-	or (c.Numeracion like @Search+'%' and @Opcion = 0) 
-	or (p.NumeroDocumento like @Search+'%' and @Opcion = 0) 
-	or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0)
-	or (cast(c.Fecha as date) = @fecha and @Opcion = 1)
+	(@Search = '' and @fecha = '' and c.EstadoCompra != 3)
+	or (c.Numeracion like @Search+'%' and @Opcion = 0 and c.EstadoCompra != 3) 
+	or (p.NumeroDocumento like @Search+'%' and @Opcion = 0 and c.EstadoCompra != 3) 
+	or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0 and c.EstadoCompra != 3)
+	or (cast(c.Fecha as date) = @fecha and @Opcion = 1 and c.EstadoCompra != 3)
 	order by c.Fecha desc,c.Hora desc
 go
 

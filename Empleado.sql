@@ -151,6 +151,11 @@ go
 select * from PermisoSubMenusTB
 go
 
+
+truncate table SubmenuTB
+truncate table PermisoMenusTB
+truncate table PermisoSubMenusTB
+
 /*
 	administrador
 		--inicio
@@ -181,19 +186,18 @@ go
 */
 
 
-
 select m.IdMenu,m.Nombre,pm.Estado from 
 PermisoMenusTB as pm inner join RolTB as r 
 on pm.IdRol = r.IdRol
 inner join MenuTB as m 
 on pm.IdMenus = m.IdMenu
-where pm.IdRol = 2 
+where pm.IdRol = 1
 go
 
 select sm.IdSubmenu,sm.Nombre,psm.Estado from PermisoSubMenusTB as psm inner join RolTB as r 
 on psm.IdRol = r.IdRol
 inner join SubmenuTB as sm
 on psm.IdSubMenus = sm.IdSubmenu
-where psm.IdRol = 2 and psm.IdMenus = 2
+where psm.IdRol = 1 and psm.IdMenus = 2
 go
 
