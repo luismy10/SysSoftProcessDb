@@ -97,6 +97,7 @@ create table RolTB
 (
 	IdRol int identity(1,1) not null,
 	Nombre varchar(60) not null,
+	Sistema bit,
 	primary key(IdRol)
 )
 go
@@ -119,6 +120,15 @@ create table SubmenuTB
 )
 go
 
+create table PrivilegiosTB(
+	IdPrivilegio int identity not null,
+	IdSubmenu int,
+	Nombre varchar(120)
+	primary key(IdPrivilegio)
+)
+go
+
+
 create table PermisoMenusTB(
 	IdRol int not null,
 	IdMenus int not null,
@@ -135,6 +145,14 @@ create table PermisoSubMenusTB(
 )
 go
 
+create table PermisoPrivilegiosTB(
+	IdRol int,
+	IdPrivilegio int,
+	Estado bit,
+	primary key(IdRol,IdPrivilegio)
+)
+go
+
 select * from EmpleadoTB
 go
 
@@ -145,12 +163,19 @@ select * from MenuTB
 go
 select * from SubmenuTB
 go
+select * from PrivilegiosTB
+go
 /**/
 select * from PermisoMenusTB
 go
 select * from PermisoSubMenusTB
 go
+select * from PermisoPrivilegiosTB
+go
 
+truncate table PermisoMenusTB
+truncate table PermisoSubMenusTB
+truncate table PermisoPrivilegiosTB
 /*
 	administrador
 		--inicio
@@ -181,19 +206,60 @@ go
 */
 
 
-
 select m.IdMenu,m.Nombre,pm.Estado from 
 PermisoMenusTB as pm inner join RolTB as r 
 on pm.IdRol = r.IdRol
 inner join MenuTB as m 
 on pm.IdMenus = m.IdMenu
-where pm.IdRol = 2 
+where pm.IdRol = 1
 go
 
 select sm.IdSubmenu,sm.Nombre,psm.Estado from PermisoSubMenusTB as psm inner join RolTB as r 
 on psm.IdRol = r.IdRol
 inner join SubmenuTB as sm
 on psm.IdSubMenus = sm.IdSubmenu
-where psm.IdRol = 2 and psm.IdMenus = 2
+where psm.IdRol = 1 and psm.IdMenus = 2
 go
 
+select pp.IdPrivilegio,p.Nombre,pp.Estado 
+from PermisosPrivilegiosTB as pp inner join PrivilegiosTB as p on pp.IdPrivilegio = p.IdPrivilegio
+where pp.IdRol = 1 and p.IdSubmenu = 1
+go
+
+print dbo.Fc_Rol_Generar_Codigo()
+go
+
+PRINT DBO.Fc_Obtener_Nombre_Rol(1)
+GO
+
+create function Fc_Obtener_Nombre_Rol
+	(
+	@IdRol int
+	)
+	RETURNS VARCHAR(60)
+	AS
+	BEGIN
+		DECLARE @Result VARCHAR(60)
+			BEGIN
+				SET @Result = (SELECT Nombre FROM RolTB WHERE IdRol=@IdRol)	
+			END
+			RETURN @Result
+	END
+
+go
+create function Fc_Rol_Generar_Codigo ()returns int
+as
+	begin 
+		declare @NewCodigo int,@CodGenerado int
+		if exists(select * from RolTB)
+			begin
+				set @NewCodigo = (select Max(IdRol) from RolTB)				
+				set @CodGenerado=@NewCodigo+1					
+			end		
+		else
+			begin
+				set @CodGenerado = 1
+			end
+		return @CodGenerado
+	end
+go

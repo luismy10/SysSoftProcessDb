@@ -24,8 +24,11 @@ go
 
 
 select * from CajaTB
-select * from CajaTB  where Estado = 'activo'
 go
+SELECT * FROM MovimientoCajaTB
+GO
+
+
 
 drop procedure Sp_Aperturar_Caja
 @IdCajaTrabajador int,
@@ -70,17 +73,30 @@ as
 	end
 go
 
+alter procedure Sp_ListarCajasAperturadasPorUsuario
+@Usuario varchar(12)
+as
+	begin
+		select a.IdCaja,a.FechaApertura,a.HoraApertura,a.FechaCierre,a.HoraCierre,a.Estado,a.Contado,a.Calculado,a.Diferencia,e.Apellidos,e.Nombres 
+		from CajaTB as a inner join EmpleadoTB as e
+		on a.IdUsuario = e.IdEmpleado
+		where 
+		e.IdEmpleado = @Usuario
+		order by a.FechaApertura desc,a.HoraApertura desc
+	end
+go
+
 
 truncate table CajaTB
 go
 truncate table MovimientoCajaTB
 go
 
+
 select * from CajaTB
 go
 SELECT * FROM MovimientoCajaTB
 GO
-
 
 create table MovimientoCajaTB(
 	IdMovimientoCaja int identity(1,1) not null,
@@ -108,12 +124,12 @@ as
 go
 
 
-create function [dbo].[Fc_Caja_Codigo_Alfanumerico] ()  returns varchar(12)
+alter function [dbo].[Fc_Caja_Codigo_Alfanumerico] ()  returns varchar(12)
 	as
 		begin
 		declare @Incremental int,@ValorActual varchar(12),@CodGenerado varchar(12)
 			begin
-				if EXISTS(select IdMovimientoInventario from MovimientoInventarioTB)
+				if EXISTS(select IdCaja from CajaTB)
 					begin					
 						set @ValorActual = (select MAX(CAST(REPLACE(REPLACE(IdCaja,'CJ',''),'','')AS INT)) from CajaTB)
 						set @Incremental = CONVERT(INT,@ValorActual) +1
@@ -137,6 +153,41 @@ create function [dbo].[Fc_Caja_Codigo_Alfanumerico] ()  returns varchar(12)
 				else
 					begin
 						set @CodGenerado = 'CJ0001'
+					end
+			end
+			return @CodGenerado
+		end
+go
+
+create function [dbo].[Fc_Lista_Caja_Codigo_Alfanumerico] ()  returns varchar(12)
+	as
+		begin
+		declare @Incremental int,@ValorActual varchar(12),@CodGenerado varchar(12)
+			begin
+				if EXISTS(select IdListaCaja from ListaCajaTB)
+					begin					
+						set @ValorActual = (select MAX(CAST(REPLACE(REPLACE(IdListaCaja,'LC',''),'','')AS INT)) from ListaCajaTB)
+						set @Incremental = CONVERT(INT,@ValorActual) +1
+						if(@Incremental <= 9)
+							begin
+								set @CodGenerado = 'LC000'+CONVERT(VARCHAR,@Incremental)
+							end
+						else if(@Incremental>=10 and @Incremental<=99)
+							begin
+								set @CodGenerado = 'LC00'+CONVERT(VARCHAR,@Incremental)
+							end
+						else if(@Incremental>=100 and @Incremental<=999)
+							begin
+								set @CodGenerado = 'LC0'+CONVERT(VARCHAR,@Incremental)
+							end
+						else
+							begin
+								set @CodGenerado = 'LC'+CONVERT(VARCHAR,@Incremental)
+							end
+					end
+				else
+					begin
+						set @CodGenerado = 'LC0001'
 					end
 			end
 			return @CodGenerado

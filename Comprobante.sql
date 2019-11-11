@@ -12,6 +12,10 @@ go
 insert into ComprobanteTB(Serie,Numeracion,FechaRegistro) values(0xAFFF,'99999997',GETDATE())
 go
 
+
+SELECT * FROM ComprobanteTB
+GO
+
 truncate table [dbo].[ComprobanteTB]
 go
 
