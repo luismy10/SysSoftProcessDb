@@ -6,13 +6,6 @@ go
 Probar cortes de caja nuevo
 */
 
-create table ListaCajaTB(
-	IdListaCaja varchar(12) not null primary key,
-	Nombre varchar(45) not null,
-	Estado bit not null
-)
-go
-
 create table CajaTB(
 	IdCaja varchar(12) primary key not null,
 	FechaApertura date null,
@@ -30,8 +23,6 @@ create table CajaTB(
 go
 
 
-select * from ListaCajaTB
-go
 select * from CajaTB
 go
 SELECT * FROM MovimientoCajaTB
@@ -106,7 +97,6 @@ select * from CajaTB
 go
 SELECT * FROM MovimientoCajaTB
 GO
-
 
 create table MovimientoCajaTB(
 	IdMovimientoCaja int identity(1,1) not null,

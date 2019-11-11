@@ -1,4 +1,4 @@
-USE PuntoVentaSysSoftDB
+use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 ----------------------------------------------table de pais-----------------------------------------------------------
