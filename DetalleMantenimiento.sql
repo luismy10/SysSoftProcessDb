@@ -23,7 +23,7 @@ go
 UPDATE  MantenimientoTB SET Estado = 0 WHERE IdMantenimiento = '0009'
 GO
 
-select * from DetalleTB WHERE IdMantenimiento = ''
+select * from DetalleTB
 go
 
 
@@ -106,11 +106,11 @@ as
 	end
 go
 
-create procedure Sp_Get_Detalle_Id
+alter procedure Sp_Get_Detalle_Id
 @IdMantenimiento varchar(10)
 as
 	begin
-		select IdDetalle,Nombre from DetalleTB where IdMantenimiento = @IdMantenimiento
+		select IdDetalle,Nombre from DetalleTB where IdMantenimiento = @IdMantenimiento order by Nombre asc
 	end
 go
 

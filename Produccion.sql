@@ -52,7 +52,7 @@ as
 		StockMinimo,StockMaximo,Cantidad,PrecioCompra,PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,
 		Estado,Lote,Inventario,ValorInventario,Imagen,
 		Impuesto,dbo.Fc_Obtener_Nombre_Impuesto(Impuesto) as ImpuestoNombre,
-		ClaveSat
+		ClaveSat,TipoPrecio
 		from SuministroTB
 		where IdSuministro=@IdSuministro or Clave = @IdSuministro
 	end
@@ -61,24 +61,7 @@ go
 SELECT * FROM SuministroTB
 GO
 
-alter procedure Sp_Listar_Suministros_Lista_View 
-@search varchar(100)
-as
-	begin
-		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
-		Cantidad,PrecioCompra,
-		PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
-		UnidadVenta,Inventario,Impuesto,Lote,ValorInventario
-		from SuministroTB 
-		where (@search = '' and Estado = 1) 
-		or 
-		(Clave = @search and Estado = 1)
-		or
-		(ClaveAlterna = @search and Estado = 1)
-		or
-		(NombreMarca like @search +'%' and Estado = 1)
-	end
-go
+
 
 create procedure Sp_Listar_Detalle_Compra_By_IdCompra
 @IdCompra varchar(12)
@@ -92,15 +75,21 @@ as
 	end
 go
 
+select * from SuministroTB
+go
+
 ALTER procedure [dbo].[Sp_Listar_Suministros]
 @Opcion tinyint,
 @Clave varchar(45),
-@NombreMarca varchar(120)
+@NombreMarca varchar(120),
+@Categoria int,
+@Marca int
 as
 	begin
 		select IdSuministro,Clave,ClaveAlterna,NombreMarca,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		PrecioCompra,Impuesto,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
-		Inventario,ValorInventario 
+		Inventario,ValorInventario,Imagen 
 		from SuministroTB
 		where (@Opcion = 0) 
 		or (Clave like @Clave+'%' and @Opcion = 1) 
@@ -110,8 +99,42 @@ as
 			(Clave like @NombreMarca+'%' and @Opcion = 3)
 			 or 
 			 (NombreMarca like @NombreMarca+'%' and @Opcion = 3)
-			)
-		or(IdSuministro = @Clave and @Opcion = 4)
+			)		
+		or (IdSuministro = @Clave and @Opcion = 4)
+		or (Categoria=@Categoria and @Opcion = 5)
+		or (Marca=@Marca and @Opcion = 6)
+	end
+go
+
+select * from SuministroTB
+go
+
+alter procedure Sp_Listar_Suministros_Lista_View 
+@opcion smallint,
+@search varchar(100)
+as
+	begin
+		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+		Cantidad,PrecioCompra,
+		PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
+		UnidadVenta,Inventario,Impuesto,Lote,ValorInventario,Imagen
+		from SuministroTB 
+		where (@opcion = 1 and @search = '' and Estado = 1) 
+		or 
+		(@opcion = 1 and Clave = @search and Estado = 1)
+		or
+		(@opcion = 1 and ClaveAlterna = @search and Estado = 1)
+		or
+		(@opcion = 1 and NombreMarca like @search +'%' and Estado = 1)
+
+		or
+		(@opcion = 2 and dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') like @search +'%' and Estado = 1)
+		or
+		(@opcion = 3 and dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') like @search +'%' and Estado = 1)
+		or
+		(@opcion = 4 and dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') like @search +'%' and Estado = 1)
+		or
+		(@opcion = 5 and dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') like @search +'%' and Estado = 1)
 	end
 go
 
