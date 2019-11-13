@@ -1,4 +1,4 @@
-use [PuntoVentaSysSoftDBDesarrollo]
+use [PuntoVentaSysSoftDBProduccion]
 go
 
 

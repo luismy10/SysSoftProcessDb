@@ -1,4 +1,4 @@
-use PuntoVentaSysSoftDBDesarrollo
+use PuntoVentaSysSoftDBProduccion
 go
 
 truncate table SuministroTB
@@ -37,6 +37,19 @@ create table SuministroTB(
 
 
 select * from SuministroTB
+go
+
+create procedure Sp_Listar_Suministro_By_Search
+@search varchar(60)
+as
+	begin
+		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+		dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') as Presentacion ,
+		Cantidad,PrecioCompra,PrecioVentaGeneral,
+		UnidadVenta,Lote,Inventario,Impuesto,ValorInventario
+		from SuministroTB 
+		where Clave = @search
+	end
 go
 
 alter procedure Sp_Suministro_By_Id

@@ -173,6 +173,11 @@ go
 select * from PermisoPrivilegiosTB
 go
 
+truncate table RolTB
+truncate table MenuTB
+truncate table SubmenuTB
+truncate table PrivilegiosTB
+
 truncate table PermisoMenusTB
 truncate table PermisoSubMenusTB
 truncate table PermisoPrivilegiosTB
@@ -263,3 +268,5 @@ as
 		return @CodGenerado
 	end
 go
+
+
