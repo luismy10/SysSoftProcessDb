@@ -39,6 +39,49 @@ create table SuministroTB(
 select * from SuministroTB
 go
 
+create procedure Sp_Listar_Suministro_Paginacion_View
+@paginacion int
+as
+	begin	
+			select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+			Cantidad,PrecioCompra,
+			PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
+			UnidadVenta,Inventario,Impuesto,Lote,ValorInventario,Imagen
+			from SuministroTB 
+			order by IdSuministro asc
+			offset @paginacion rows fetch next 20 rows only
+	end
+go
+
+alter procedure Sp_Listar_Suministros_Lista_View 
+@opcion smallint,
+@search varchar(100)
+as
+	begin
+		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+		Cantidad,PrecioCompra,
+		PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
+		UnidadVenta,Inventario,Impuesto,Lote,ValorInventario,Imagen
+		from SuministroTB 
+		where (@opcion = 1 and @search = '' and Estado = 1) 
+		or 
+		(@opcion = 1 and Clave = @search and Estado = 1)
+		or
+		(@opcion = 1 and ClaveAlterna = @search and Estado = 1)
+		or
+		(@opcion = 1 and NombreMarca like @search +'%' and Estado = 1)
+
+		or
+		(@opcion = 2 and dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') like @search +'%' and Estado = 1)
+		or
+		(@opcion = 3 and dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') like @search +'%' and Estado = 1)
+		or
+		(@opcion = 4 and dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') like @search +'%' and Estado = 1)
+		or
+		(@opcion = 5 and dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') like @search +'%' and Estado = 1)
+	end
+go
+
 create procedure Sp_Listar_Suministro_By_Search
 @search varchar(60)
 as
@@ -91,7 +134,22 @@ go
 select * from SuministroTB
 go
 
-ALTER procedure [dbo].[Sp_Listar_Suministros]
+create procedure Sp_Listar_Suministro_Paginacion
+@paginacion int
+as
+	begin	
+		select IdSuministro,Clave,ClaveAlterna,NombreMarca,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+		PrecioCompra,Impuesto,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
+		Inventario,ValorInventario,Imagen 
+		from SuministroTB 
+		order by IdSuministro asc
+		offset @paginacion rows fetch next 20 rows only
+	end
+go
+
+
+ALTER procedure Sp_Listar_Suministros
 @Opcion tinyint,
 @Clave varchar(45),
 @NombreMarca varchar(120),
@@ -122,34 +180,6 @@ go
 select * from SuministroTB
 go
 
-alter procedure Sp_Listar_Suministros_Lista_View 
-@opcion smallint,
-@search varchar(100)
-as
-	begin
-		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
-		Cantidad,PrecioCompra,
-		PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
-		UnidadVenta,Inventario,Impuesto,Lote,ValorInventario,Imagen
-		from SuministroTB 
-		where (@opcion = 1 and @search = '' and Estado = 1) 
-		or 
-		(@opcion = 1 and Clave = @search and Estado = 1)
-		or
-		(@opcion = 1 and ClaveAlterna = @search and Estado = 1)
-		or
-		(@opcion = 1 and NombreMarca like @search +'%' and Estado = 1)
-
-		or
-		(@opcion = 2 and dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') like @search +'%' and Estado = 1)
-		or
-		(@opcion = 3 and dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') like @search +'%' and Estado = 1)
-		or
-		(@opcion = 4 and dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') like @search +'%' and Estado = 1)
-		or
-		(@opcion = 5 and dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') like @search +'%' and Estado = 1)
-	end
-go
 
 alter procedure Sp_Get_Suministro_For_Asignacion_By_Id
 @IdSuministro varchar(12)

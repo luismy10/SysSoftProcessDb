@@ -1,4 +1,4 @@
-use PuntoVentaSysSoftDB
+use [PuntoVentaSysSoftDBProduccion]
 go
 
 create table TipoDocumentoTB(
@@ -10,6 +10,6 @@ create table TipoDocumentoTB(
 )
 go
 
-select * from TipoDocumentoTB
+select * from PreciosTB
 go
 
