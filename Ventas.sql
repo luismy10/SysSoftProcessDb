@@ -1,4 +1,4 @@
-use [PuntoVentaSysSoftDBProduccion]
+use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 select * from VentaTB
@@ -13,6 +13,12 @@ y quital algunos campos
 agregar tipo de venta
 */
 
+/*
+	AGREGAR CODIGO DE VENTA
+	FECHA VENTA - DATE
+	HORA VENTA - TIME
+*/
+
 create table VentaTB(
 	IdVenta varchar(12) not null,
 	Cliente varchar(12) null,
@@ -21,7 +27,7 @@ create table VentaTB(
 	Moneda int not null,
 	Serie varchar(8) not null,
 	Numeracion varchar(16) not null,
-	FechaVenta datetime not null,
+	FechaVenta date not null,
 	SubTotal decimal(18,4) not null,
 	--Gravada decimal(18,2) not null,
 	Descuento decimal(18,4) not null,
@@ -36,8 +42,16 @@ create table VentaTB(
 )
 go
 
-select * from EmpleadoTB
+select * from VentaTB
 go
+
+update VentaTB set HoraVenta = CAST(FechaVenta AS TIME)
+GO
+
+update VentaTB set FechaVenta = CAST(FechaVenta AS DATE)
+GO
+
+update VentaTB set Codigo = ''
 
 Sp_Listar_Ventas '',
 GO
@@ -54,6 +68,7 @@ as
 	select
 		v.IdVenta,
 		v.FechaVenta,
+		v.HoraVenta,
 		c.Apellidos + ' '+c.Nombres as Cliente,
 		td.Nombre as Comprobante,
 		v.Serie,v.Numeracion,
@@ -94,6 +109,24 @@ as
 	order by v.FechaVenta desc 
 go
 
+alter procedure Sp_Listar_Ventas_Mostrar
+@search varchar(100)
+as
+	select
+		v.IdVenta,
+		v.FechaVenta,
+		v.HoraVenta,
+		m.Simbolo,
+		v.Total,
+		v.Codigo
+		from VentaTB as v 
+		inner join MonedaTB as m on v.Moneda = m.IdMoneda
+		where 
+		Codigo like @search+'%'		
+	   order by v.FechaVenta desc 
+go
+
+
 
 select  dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,m.Simbolo,v.Total
 from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda 
@@ -103,11 +136,11 @@ go
 select * from ArticuloTB
 go
 
-alter procedure Sp_Listar_Ventas_Detalle_By_Id 
+ALTER procedure [dbo].[Sp_Listar_Ventas_Detalle_By_Id] 
 @IdVenta varchar(12)
 as
 	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
-	d.IdArticulo,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,
+	a.IdSuministro,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,
 	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,
 	d.IdImpuesto,
 	d.Cantidad,d.CantidadGranel,d.PrecioVenta,
@@ -238,7 +271,7 @@ alter procedure Sp_Obtener_Venta_ById
 @idVenta varchar(12)
 as
 	begin
-		select  v.FechaVenta,c.Apellidos,c.Nombres,t.Nombre as Comprobante,t.NombreImpresion,
+		select  v.FechaVenta,v.HoraVenta,c.Apellidos,c.Nombres,t.Nombre as Comprobante,t.NombreImpresion,
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
