@@ -23,7 +23,7 @@ go
 UPDATE  MantenimientoTB SET Estado = 0 WHERE IdMantenimiento = '0009'
 GO
 
-select * from DetalleTB
+select * from DetalleTB order by IdMantenimiento asc
 go
 
 

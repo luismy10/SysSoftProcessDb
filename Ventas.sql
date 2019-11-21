@@ -45,6 +45,10 @@ go
 select * from VentaTB
 go
 
+
+[dbo].[Sp_Listar_Ventas_Detalle_By_Id] 'VT0007'
+
+
 update VentaTB set HoraVenta = CAST(FechaVenta AS TIME)
 GO
 
@@ -106,7 +110,7 @@ as
 			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0
 		)
 	
-	order by v.FechaVenta desc 
+	order by v.FechaVenta desc ,v.HoraVenta desc
 go
 
 alter procedure Sp_Listar_Ventas_Mostrar
@@ -133,8 +137,6 @@ from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 where v.IdVenta = ?
 go
 
-select * from ArticuloTB
-go
 
 ALTER procedure [dbo].[Sp_Listar_Ventas_Detalle_By_Id] 
 @IdVenta varchar(12)
@@ -143,7 +145,7 @@ as
 	a.IdSuministro,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,
 	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,
 	d.IdImpuesto,
-	d.Cantidad,d.CantidadGranel,d.PrecioVenta,
+	d.Cantidad,d.CantidadGranel,d.CostoVenta,d.PrecioVenta,
 	d.Descuento,d.ValorImpuesto,
 	d.ImpuestoSumado,d.Importe
 	from DetalleVentaTB as d inner join SuministroTB as a on d.IdArticulo = a.IdSuministro
@@ -267,7 +269,7 @@ go
 select * from ImpuestoTB
 go
 
-alter procedure Sp_Obtener_Venta_ById
+ALTER procedure Sp_Obtener_Venta_ById
 @idVenta varchar(12)
 as
 	begin
@@ -275,7 +277,7 @@ as
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Simbolo,v.Efectivo,v.Vuelto,v.Total
+		m.Simbolo,v.Efectivo,v.Vuelto,v.Total,v.Codigo
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento

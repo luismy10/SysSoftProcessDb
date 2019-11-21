@@ -1,10 +1,13 @@
-use PuntoVentaSysSoftDBProduccion
+use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 truncate table SuministroTB
 go
 
 select * from SuministroTB
+go
+
+UPDATE SuministroTB SET IdSuministro =  'SM'+SUBSTRING(IdSuministro,3,LEN(IdSuministro))
 go
 
 
@@ -289,12 +292,12 @@ go
 truncate table AsignacionDetalleTB
 go
 
-update SuministroTB set ValorInventario = 0 where IdSuministro = 'SM0007'
+update SuministroTB set Cantidad = 0 where IdSuministro = 'SM3762'
 go
 
 select * from SuministroTB
 go
-select * from KardexSuministroTB
+select * from KardexSuministroTB where IdSuministro = 'SM3762'
 go
 select * from PreciosTB
 go
