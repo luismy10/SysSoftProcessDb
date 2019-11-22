@@ -256,17 +256,19 @@ alter procedure Sp_Reporte_General_Ventas
 @FechaFinal varchar(20),
 @TipoDocumento int
 as
-select td.Nombre,cast(v.FechaVenta as date) as FechaVenta,c.Apellidos,c.Nombres,dbo.Fc_Obtener_Simbolo_Moneda(v.Moneda) as Simbolo,v.Total 
+select td.Nombre,v.FechaVenta,concat(c.Apellidos,' ',c.Nombres) as Cliente,v.Serie,v.Numeracion,
+dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
+dbo.Fc_Obtener_Simbolo_Moneda(v.Moneda) as Simbolo,v.Total 
 from VentaTB as v inner join TipoDocumentoTB as td on v.Comprobante = td.IdTipoDocumento
 inner join ClienteTB as c on v.Cliente = c.IdCliente
 where
-( CAST(FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0)
+(FechaVenta  BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0)
 or
-( CAST(FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @TipoDocumento)
-order by v.FechaVenta desc
+(FechaVenta BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @TipoDocumento)
+order by v.FechaVenta desc,v.HoraVenta desc
 go
 
-select * from ImpuestoTB
+select * from VentaTB
 go
 
 ALTER procedure Sp_Obtener_Venta_ById
