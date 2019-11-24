@@ -226,6 +226,9 @@ go
 select * from CuentasHistorialClienteTB
 go
 
+UPDATE DetalleVentaTB SET IdArticulo =  'SM'+SUBSTRING(IdArticulo,3,LEN(IdArticulo))
+go
+
 
 create table DetalleVentaTB(
 	IdVenta varchar(12) not null,
