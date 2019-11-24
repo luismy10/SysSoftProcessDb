@@ -268,6 +268,8 @@ or
 order by v.FechaVenta desc,v.HoraVenta desc
 go
 
+Sp_Reporte_General_Ventas '2019-11-21','2019-11-21',0
+
 select * from VentaTB
 go
 
