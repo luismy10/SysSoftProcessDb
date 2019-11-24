@@ -4,10 +4,10 @@ go
 truncate table SuministroTB
 go
 
-select * from SuministroTB
+select SUBSTRING(IdSuministro,3,LEN(IdSuministro)) from SuministroTB where IdSuministro like 'SM%'
 go
 
-UPDATE SuministroTB SET IdSuministro =  'SM'+SUBSTRING(IdSuministro,3,LEN(IdSuministro))
+UPDATE SwauministroTB SET IdSuministro =  'SM'+SUBSTRING(IdSuministro,3,LEN(IdSuministro))
 go
 
 
