@@ -292,7 +292,7 @@ go
 truncate table AsignacionDetalleTB
 go
 
-update SuministroTB set Cantidad = 0 where IdSuministro = 'SM3762'
+update SuministroTB set Cantidad = 0 where IdSuministro = 'SM3761'
 go
 
 select * from SuministroTB

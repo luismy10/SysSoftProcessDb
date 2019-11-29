@@ -35,7 +35,9 @@ alter procedure Sp_Listar_Empleados
 @search varchar(55)
 as
 select ROW_NUMBER() over( order by IdEmpleado desc) as Filas,IdEmpleado,
-NumeroDocumento,Apellidos,Nombres,Telefono,Celular,dbo.Fc_Obtener_Nombre_Detalle(Puesto,'0012') as Puesto,
+NumeroDocumento,Apellidos,Nombres,Telefono,Celular,
+dbo.Fc_Obtener_Nombre_Detalle(Puesto,'0012') as Puesto,
+dbo.Fc_Obtener_Nombre_Rol(Rol) as Rol,
 dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado
  from EmpleadoTB 
 where (@search = '')  or (NumeroDocumento like @search+'%')
@@ -165,12 +167,18 @@ select * from SubmenuTB
 go
 select * from PrivilegiosTB
 go
+
+update PrivilegiosTB set IdPrivilegio = IdPrivilegio+1
+go
 /**/
 select * from PermisoMenusTB
 go
 select * from PermisoSubMenusTB
 go
 select * from PermisoPrivilegiosTB
+go
+
+update PermisoPrivilegiosTB set IdPrivilegio =IdPrivilegio+1 where IdRol = 3
 go
 
 truncate table RolTB
