@@ -10,6 +10,12 @@ go
 UPDATE SwauministroTB SET IdSuministro =  'SM'+SUBSTRING(IdSuministro,3,LEN(IdSuministro))
 go
 
+select * from SuministroTB
+go
+
+/*
+	CAMBIAR VALOR DE INVENTARIO DE BIT A TINYINT
+*/
 
 create table SuministroTB(
 	IdSuministro varchar(12) primary key not null,
@@ -34,13 +40,11 @@ create table SuministroTB(
 	PrecioUtilidadGeneral decimal(18,4),	
 	Lote bit,
 	Inventario bit,
-	ValorInventario bit,
+	ValorInventario tinyint,
 	Imagen varchar(MAX)
 )
 
 
-select * from SuministroTB
-go
 
 create procedure Sp_Listar_Suministro_Paginacion_View
 @paginacion int
@@ -276,9 +280,10 @@ WHERE
 	order by k.Fecha,k.Hora asc
 GO
 
-
+--- por ocaciones
 truncate table SuministroTB
 go
+--
 truncate table KardexSuministroTB
 go
 truncate table PreciosTB

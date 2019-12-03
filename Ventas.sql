@@ -19,6 +19,10 @@ agregar tipo de venta
 	HORA VENTA - TIME
 */
 
+/*
+	
+*/
+
 create table VentaTB(
 	IdVenta varchar(12) not null,
 	Cliente varchar(12) null,

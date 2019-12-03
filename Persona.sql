@@ -1,6 +1,15 @@
 USE PuntoVentaSysSoftDBDesarrollo
 go
 
+/*
+QUITADO LA TABLA FACTURACION
+QUITAR LOS CAMPOS USUARIO DE REGISTRO
+QUITAR LOS CAMPOS FECHA DE REGISTRO
+QUITAR LOS CAMPOS USUARIO ACTUALIZO
+QUITAR LOS CAMPOS FECHA ACTUALIZO
+
+AGREGAR EL CAMPO REPRESENTANTE
+*/
 
 create table ClienteTB(
 	IdCliente varchar(12) not null,
@@ -14,11 +23,12 @@ create table ClienteTB(
 	Celular varchar(20) null,
 	Email varchar(100) null,
 	Direccion varchar(200) null,
+	Representante varchar(200) null,
 	Estado int not null,
-	UsuarioRegistro varchar(50) null,
-	FechaRegistro datetime null,
-	UsuarioActualizado varchar(50) null,
-	FechaActualizado date null,	
+	--UsuarioRegistro varchar(50) null,
+	--FechaRegistro datetime null,
+	--UsuarioActualizado varchar(50) null,
+	--FechaActualizado date null,	
 	primary key(IdCliente)
 )
 go
@@ -32,32 +42,37 @@ go
 alter procedure Sp_Listar_Clientes
 @search varchar(55)
 as
-select ROW_NUMBER() over( order by ci.IdCliente desc) as Filas,ci.IdCliente,ci.NumeroDocumento,
-ci.Apellidos,ci.Nombres,
-ci.Telefono,ci.Celular,
-dbo.Fc_Obtener_Nombre_Detalle(ci.Estado,'0001') as Estado,CAST(ci.FechaRegistro AS DATE) FRegistro
- from ClienteTB as ci 
-where (@search = '')  or (ci.NumeroDocumento like @search+'%')
-or (
-			(CONCAT(ci.Apellidos,' ',ci.Nombres) LIKE @search+'%')
-			or
-			(CONCAT(ci.Nombres,' ',ci.Apellidos) LIKE @search+'%')
-			
-		)
+select ci.IdCliente,ci.NumeroDocumento,ci.Apellidos,ci.Nombres,ci.Telefono,
+ci.Celular,ci.Direccion,ci.Representante,dbo.Fc_Obtener_Nombre_Detalle(ci.Estado,'0001') as Estado
+from ClienteTB as ci 
+where
+	(@search = '')  
+	or 
+	(ci.NumeroDocumento like @search+'%')
+	or 
+	(
+		(CONCAT(ci.Apellidos,' ',ci.Nombres) LIKE @search+'%')
+		or
+		(CONCAT(ci.Nombres,' ',ci.Apellidos) LIKE @search+'%')			
+	)
 go 
 
 alter procedure Sp_Listar_Clientes_Venta
 @search varchar(55)
 as
-select ROW_NUMBER() over( order by ci.IdCliente desc) as Filas,ci.IdCliente,ci.NumeroDocumento,
-ci.Apellidos,ci.Nombres
+select ci.IdCliente,ci.NumeroDocumento,
+ci.Apellidos,ci.Nombres,ci.Direccion
 from ClienteTB as ci
-where (@search = '')  or (ci.NumeroDocumento like @search+'%')
-or (
-			(CONCAT(ci.Apellidos,' ',ci.Nombres) LIKE @search+'%')
-			or
-			(CONCAT(ci.Nombres,' ',ci.Apellidos) LIKE @search+'%')
-		)
+where 
+	(@search = '')  
+	or 
+	(ci.NumeroDocumento like @search+'%')
+	or 
+	(
+		(CONCAT(ci.Apellidos,' ',ci.Nombres) LIKE @search+'%')
+		or
+		(CONCAT(ci.Nombres,' ',ci.Apellidos) LIKE @search+'%')
+	)
 go
 
 Sp_Get_Cliente_By_Id '78945612'
@@ -69,15 +84,11 @@ as
 	begin
 		select ci.IdCliente,ci.TipoDocumento,ci.NumeroDocumento,ci.Apellidos,
 		ci.Nombres,ci.Sexo,ci.FechaNacimiento,
-		ci.Telefono,ci.Celular,ci.Email,ci.Direccion,ci.Estado,
-		f.TipoDocumento as TipoFactura,f.NumeroDocumento as NumeroFactura,f.RazonSocial,f.NombreComercial,
-		f.Pais,f.Ciudad,f.Provincia,f.Distrito
-		from ClienteTB as ci inner join FacturacionTB as f
-		on ci.IdCliente = f.IdCliente
+		ci.Telefono,ci.Celular,ci.Email,ci.Direccion,ci.Representante,ci.Estado
+		from ClienteTB as ci
 		where ci.NumeroDocumento = @NumeroDocumento
 	end
 go
-
 
 select * from FacturacionTB
 go
@@ -85,7 +96,7 @@ go
 truncate table FacturacionTB
 go
 
-create table FacturacionTB(
+drop table FacturacionTB(
 	IdFacturacion bigint identity primary key not null,
 	IdCliente varchar(12) not null,
 	TipoDocumento int null,
@@ -100,87 +111,6 @@ create table FacturacionTB(
 )
 go
 
-/*
-drop procedure Sp_Crud_Persona
-	@IdPersona varchar(12),
-	@TipoDocumento int,
-	@NumeroDocumento varchar(20),
-	@ApellidoPaterno varchar(50),
-	@ApellidoMaterno varchar(50),
-	@PrimerNombre varchar(50),
-	@SegundoNombre varchar(50),
-	@Sexo int,
-	@FechaNacimiento date,
-	@Estado int,
-	@UsuarioRegistro varchar(50),
-	------------------------------------
-	@TipoDocumentoFactura int,
-	@NumeroDocumentoFactura varchar(20),
-	@RazonSocial varchar(50) ,
-	@NombreComercial varchar(50),
-
-	@Message varchar(20) out
-as
-	begin
-		begin try
-			begin transaction
-				if exists(select IdPersona from PersonaTB where IdPersona = @IdPersona)
-					begin
-						if exists(select NumeroDocumento from PersonaTB where IdPersona <> @IdPersona and NumeroDocumento = @NumeroDocumento)
-							begin								
-								rollback
-								set @Message = 'duplicate'
-							end
-						else
-							begin
-								update PersonaTB set TipoDocumento=@TipoDocumento,NumeroDocumento = @NumeroDocumento,
-								ApellidoPaterno=UPPER(@ApellidoPaterno),ApellidoMaterno=UPPER(@ApellidoMaterno),
-								PrimerNombre=UPPER(@PrimerNombre),SegundoNombre=UPPER(@SegundoNombre),Sexo=@Sexo,
-								FechaNacimiento=@FechaNacimiento,Estado=@Estado
-								where IdPersona = @IdPersona
-
-								update FacturacionTB set TipoDocumento =@TipoDocumentoFactura,
-								NumeroDocumento=@NumeroDocumentoFactura,RazonSocial=UPPER(@RazonSocial),
-								NombreComercial=UPPER(@NombreComercial)
-								where IdPersona =  @IdPersona
-
-								commit
-								set @Message = 'updated'
-							end
-					end
-				else
-					begin
-						if exists(select NumeroDocumento from PersonaTB where NumeroDocumento = @NumeroDocumento)
-							begin
-								rollback
-								set @Message = 'duplicate'
-							end
-						else
-							begin
-								declare @codigoPersona varchar(12)
-								set @codigoPersona = dbo.Fc_Persona_Codigo_Alfanumerico()
-								insert into PersonaTB(IdPersona,TipoDocumento,NumeroDocumento,ApellidoPaterno,ApellidoMaterno,PrimerNombre,SegundoNombre,Sexo,FechaNacimiento,Estado,UsuarioRegistro,FechaRegistro)
-								values(@codigoPersona,@TipoDocumento,@NumeroDocumento,UPPER(@ApellidoPaterno),UPPER(@ApellidoMaterno),UPPER(@PrimerNombre),UPPER(@SegundoNombre),@Sexo,@FechaNacimiento,@Estado,@UsuarioRegistro,GETDATE())
-								
-								insert into FacturacionTB(IdPersona,TipoDocumento,NumeroDocumento,RazonSocial,NombreComercial)
-								values(@codigoPersona,@TipoDocumentoFactura,@NumeroDocumentoFactura,UPPER(@RazonSocial),UPPER(@NombreComercial))
-
-								commit 
-								set @Message = 'registered'
-							end
-					end
-
-				
-		end try
-
-		begin catch
-			rollback
-			set @Message='error'
-		end catch
-	end
-
-GO
-*/
 
 declare @NumeroDocumento varchar(20),@idpersona varchar(20)
 set @NumeroDocumento = '71498203'
@@ -206,7 +136,6 @@ else
 go
 
 alter procedure Sp_Crud_Persona_Cliente
-	------------------------------------
 	@IdCliente varchar(12),
 	@TipoDocumento int,
 	@NumeroDocumento varchar(20),
@@ -218,17 +147,8 @@ alter procedure Sp_Crud_Persona_Cliente
 	@Celular varchar(20) ,
 	@Email varchar(100) ,
 	@Direccion varchar(200) ,
+	@Representante varchar(200),
 	@Estado int,
-	@UsuarioRegistro varchar(50),
-	------------------------------------
-	@TipoDocumentoFactura int,
-	@NumeroDocumentoFactura varchar(20),
-	@RazonSocial varchar(50) ,
-	@NombreComercial varchar(50),
-	@Pais char(3),
-	@Ciudad int,
-	@Provincia int,
-	@Distrito int,
 	@Message varchar(20) out
 as
 	begin
@@ -242,19 +162,11 @@ as
 								set @Message = 'duplicate'
 							end
 						else
-							begin
-								
+							begin								
 								update ClienteTB set TipoDocumento=@TipoDocumento,NumeroDocumento=@NumeroDocumento,Apellidos=UPPER(@Apellidos),Nombres=UPPER(@Nombres),
 								Sexo=@Sexo,FechaNacimiento=@FechaNacimiento,
-								Telefono=@Telefono,Celular=@Celular,Email=@Email,Direccion=@Direccion,Estado=@Estado,
-								UsuarioActualizado=@UsuarioRegistro,FechaActualizado = GETDATE()
+								Telefono=@Telefono,Celular=@Celular,Email=@Email,Direccion=@Direccion,Representante=@Representante,Estado=@Estado
 								where IdCliente = @IdCliente
-
-								update FacturacionTB set TipoDocumento =@TipoDocumentoFactura,
-								NumeroDocumento=@NumeroDocumentoFactura,RazonSocial=UPPER(@RazonSocial),
-								NombreComercial=UPPER(@NombreComercial),Pais=@Pais,Ciudad=@Ciudad,Provincia=@Provincia,Distrito=@Distrito
-								where IdCliente =  @IdCliente
-
 								commit
 								set @Message = 'updated'
 							end
@@ -264,11 +176,8 @@ as
 						declare @codCliente varchar(12)		
 						set @codCliente = dbo.Fc_Cliente_Codigo_Alfanumerico()
 
-						insert into ClienteTB(IdCliente,TipoDocumento,NumeroDocumento,Apellidos,Nombres,Sexo,FechaNacimiento,Telefono,Celular,Email,Direccion,Estado,UsuarioRegistro,FechaRegistro) 
-						values(@codCliente,@TipoDocumento,@NumeroDocumento,UPPER(@Apellidos),UPPER(@Nombres),@Sexo,@FechaNacimiento,@Telefono,@Celular,@Email,@Direccion,@Estado,@UsuarioRegistro,GETDATE())
-
-						insert into FacturacionTB(IdCliente,TipoDocumento,NumeroDocumento,RazonSocial,NombreComercial,Pais,Ciudad ,Provincia ,Distrito )
-						values(@codCliente,@TipoDocumentoFactura,@NumeroDocumentoFactura,UPPER(@RazonSocial),UPPER(@NombreComercial),@Pais,@Ciudad,@Provincia,@Distrito)
+						insert into ClienteTB(IdCliente,TipoDocumento,NumeroDocumento,Apellidos,Nombres,Sexo,FechaNacimiento,Telefono,Celular,Email,Direccion,Representante,Estado) 
+						values(@codCliente,@TipoDocumento,@NumeroDocumento,UPPER(@Apellidos),UPPER(@Nombres),@Sexo,@FechaNacimiento,@Telefono,@Celular,@Email,@Direccion,@Representante,@Estado)
 
 						commit 
 						set @Message = 'registered'						

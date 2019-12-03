@@ -1,4 +1,4 @@
-USE PuntoVentaSysSoftDB
+USE [PuntoVentaSysSoftDBDesarrollo]
 go
 
 truncate table ProveedorTB

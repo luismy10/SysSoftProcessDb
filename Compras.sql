@@ -1,4 +1,4 @@
-use [PuntoVentaSysSoftDBProduccion]
+use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 ----------------------------------------------compra-----------------------------------------------------------
