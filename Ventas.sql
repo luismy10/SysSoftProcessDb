@@ -208,6 +208,19 @@ ALTER function [dbo].[Fc_Venta_Codigo_Alfanumerico] ()  returns varchar(12)
 		end
 go
 
+select DATEPART(month, FechaVenta) AS FechaVenta,sum(Total) as Total from VentaTB
+where FechaVenta between '2019/11/01' and '2019/12/07' and Estado = 1
+group by DATEPART(month, FechaVenta)
+--order by FechaVenta,Total desc
+go
+
+select FechaVenta,sum(Total) as Total from VentaTB 
+where FechaVenta between '2019/11/01' and '2019/12/07' and  Estado = 1
+group by FechaVenta
+order by FechaVenta desc
+go
+
+
 truncate table VentaTB
 go
 truncate table DetalleVentaTB
@@ -258,7 +271,7 @@ go
 update ArticuloTB set Cantidad = Cantidad + ? where IdArticulo = ?
 go
 
-Sp_Reporte_General_Ventas '2019/11/24','2019/11/24',0,'',''
+Sp_Reporte_General_Ventas '2019/11/24','2019/12/05',0,'',''
 
 alter procedure Sp_Reporte_General_Ventas 
 @FechaInicial varchar(20),
