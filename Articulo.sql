@@ -104,8 +104,8 @@ create table PreciosTB
 	IdArticulo varchar(12) not null,
 	IdSuministro varchar(12) not null,
 	Nombre varchar(30) not null,
-	Valor decimal(18,4) not null,
-	Factor decimal(18,4) not null
+	Valor decimal(18,6) not null,
+	Factor decimal(18,6) not null
 	primary key(IdPrecios)
 )
 go

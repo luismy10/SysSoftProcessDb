@@ -26,6 +26,10 @@ GO
 select * from DetalleTB order by IdMantenimiento asc
 go
 
+/*
+CAMBIAR LA INFORMACION DE LA FILA 10 DE LA TABLA MANTENIMIENTO
+NOMBRE DE PRECIO A NOMBRE DE OPERACIONES
+*/
 
 /*
 Se agrego un nuevo campo de validar

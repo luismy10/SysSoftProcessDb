@@ -17,6 +17,7 @@ agregar tipo de venta
 	AGREGAR CODIGO DE VENTA
 	FECHA VENTA - DATE
 	HORA VENTA - TIME
+	TOTAL,DESCUENTO,SUBTOTAL A 6 DECIMALES
 */
 
 /*
@@ -32,11 +33,11 @@ create table VentaTB(
 	Serie varchar(8) not null,
 	Numeracion varchar(16) not null,
 	FechaVenta date not null,
-	SubTotal decimal(18,4) not null,
+	SubTotal decimal(18,8) not null,
 	--Gravada decimal(18,2) not null,
-	Descuento decimal(18,4) not null,
+	Descuento decimal(18,8) not null,
 	--Igv decimal(18,2) not null,
-	Total decimal(18,4) not null,
+	Total decimal(18,8) not null,
 	Tipo int not null,
 	Estado int null,
 	Observaciones varchar(200) null,
@@ -147,11 +148,9 @@ ALTER procedure [dbo].[Sp_Listar_Ventas_Detalle_By_Id]
 as
 	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
 	a.IdSuministro,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,
-	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,
-	d.IdImpuesto,
+	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,	
 	d.Cantidad,d.CantidadGranel,d.CostoVenta,d.PrecioVenta,
-	d.Descuento,d.ValorImpuesto,
-	d.ImpuestoSumado,d.Importe
+	d.Descuento,d.DescuentoCalculado,d.IdImpuesto,d.NombreImpuesto,d.ValorImpuesto,d.Importe
 	from DetalleVentaTB as d inner join SuministroTB as a on d.IdArticulo = a.IdSuministro
 	where d.IdVenta = @IdVenta
 go
@@ -246,24 +245,34 @@ go
 UPDATE DetalleVentaTB SET IdArticulo =  'SM'+SUBSTRING(IdArticulo,3,LEN(IdArticulo))
 go
 
+/*
+CAMBIAR TODO A 8 DECIMALES
+BORRAR COSTO VENTA GRANEL
+BORRAR PRECIO VENTA GRANEL
+BORRAR IMPUESTO SUMADO
+
+AGREGAR DescuentoCalculado 
+AGREGAR idoperacion
+*/
 
 create table DetalleVentaTB(
 	IdVenta varchar(12) not null,
 	IdArticulo varchar(12) not null,
-	Cantidad decimal(18,4) not null,
-	CantidadGranel decimal(18,4) not null,
-	CostoVenta decimal(18,4) not null,
-	CostoVentaGranel decimal(18,4) not null,
-	PrecioVenta decimal(18, 4) not null,
-	PrecioVentaGranel decimal(18,4) not null,
-	Descuento decimal(18, 4) null,
-
+	Cantidad decimal(18,8) not null,
+	CantidadGranel decimal(18,8) not null,
+	CostoVenta decimal(18,8) not null,
+	--CostoVentaGranel decimal(18,6) not null,
+	PrecioVenta decimal(18, 8) not null,
+	--PrecioVentaGranel decimal(18,6) not null,
+	Descuento decimal(18, 8) null,
+	DescuentoCalculado decimal(18,8) not null,
+	IdOperacion int null,
 	IdImpuesto int null,
 	NombreImpuesto varchar(12) null,
-	ValorImpuesto decimal(18,4) null,
-	ImpuestoSumado decimal(18,4) null,
+	ValorImpuesto decimal(18,2) null,
+	ImpuestoSumado decimal(18,8) null,
 
-	Importe decimal(18, 4) not null,
+	Importe decimal(18, 8) not null,
 	PRIMARY KEY (IdVenta,IdArticulo)
 )
 go
@@ -330,11 +339,12 @@ ALTER procedure Sp_Obtener_Venta_ById
 @idVenta varchar(12)
 as
 	begin
-		select  v.FechaVenta,v.HoraVenta,c.Apellidos,c.Nombres,t.Nombre as Comprobante,t.NombreImpresion,
+		select  v.FechaVenta,v.HoraVenta,dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,c.NumeroDocumento,c.Apellidos,c.Nombres,c.Direccion,
+		t.Nombre as Comprobante,t.NombreImpresion,
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Simbolo,v.Efectivo,v.Vuelto,v.Total,v.Codigo
+		m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Total,v.Codigo
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
