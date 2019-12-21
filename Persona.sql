@@ -39,6 +39,9 @@ go
 select * from ClienteTB
 go
 
+select tipo from SuministroTB
+go
+
 alter procedure Sp_Listar_Clientes
 @search varchar(55)
 as

@@ -15,7 +15,22 @@ go
 
 /*
 	CAMBIAR VALOR DE INVENTARIO DE BIT A TINYINT
+
+	0-1
+	0-1
+	1-2-3
+
 */
+
+select * from SuministroTB where ValorInventario = 1
+select * from SuministroTB where ValorInventario = 0
+
+update SuministroTB set ValorInventario = 3 where ValorInventario = 0
+update SuministroTB set ValorInventario = 1 where ValorInventario = 1
+
+
+
+update 
 
 create table SuministroTB(
 	IdSuministro varchar(12) primary key not null,
