@@ -60,10 +60,10 @@ where
 	)
 go 
 
-alter procedure Sp_Listar_Clientes_Venta
+ALTER procedure Sp_Listar_Clientes_Venta
 @search varchar(55)
 as
-select ci.IdCliente,ci.NumeroDocumento,
+select ci.IdCliente,dbo.Fc_Obtener_Nombre_Detalle(TipoDocumento,'0003') as Documento,ci.NumeroDocumento,
 ci.Apellidos,ci.Nombres,ci.Direccion
 from ClienteTB as ci
 where 
@@ -76,6 +76,7 @@ where
 		or
 		(CONCAT(ci.Nombres,' ',ci.Apellidos) LIKE @search+'%')
 	)
+
 go
 
 Sp_Get_Cliente_By_Id '78945612'

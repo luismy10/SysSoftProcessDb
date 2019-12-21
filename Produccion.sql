@@ -15,11 +15,15 @@ go
 
 /*
 	CAMBIAR VALOR DE INVENTARIO DE BIT A TINYINT
+<<<<<<< HEAD
 
 	0-1
 	0-1
 	1-2-3
 
+=======
+	CAMBIAR CANTIDAD,PRECIOCOMPRA,PRECIOVENTA,PRECIOUTILIDAD A 8 DECIMALES
+>>>>>>> e62ccc57985e1b724b0457e156d607161960d6ae
 */
 
 select * from SuministroTB where ValorInventario = 1
@@ -47,12 +51,12 @@ create table SuministroTB(
 	Estado int,
 	StockMinimo decimal(18,4),
 	StockMaximo decimal(18,4),
-	Cantidad decimal(18,4),
+	Cantidad decimal(18,8),
 	Impuesto int,
-	PrecioCompra decimal(18,4),
-	PrecioVentaGeneral decimal(18,4),	
+	PrecioCompra decimal(18,8),
+	PrecioVentaGeneral decimal(18,8),	
 	PrecioMargenGeneral smallint,
-	PrecioUtilidadGeneral decimal(18,4),	
+	PrecioUtilidadGeneral decimal(18,8),	
 	Lote bit,
 	Inventario bit,
 	ValorInventario tinyint,
@@ -104,15 +108,15 @@ as
 	end
 go
 
-create procedure Sp_Listar_Suministro_By_Search
+alter procedure Sp_Listar_Suministro_By_Search
 @search varchar(60)
 as
 	begin
-		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
-		dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') as Presentacion ,
-		Cantidad,PrecioCompra,PrecioVentaGeneral,
-		UnidadVenta,Lote,Inventario,Impuesto,ValorInventario
-		from SuministroTB 
+		select s.IdSuministro,s.Clave,s.NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(s.Marca,'0007') as Marca,
+		dbo.Fc_Obtener_Nombre_Detalle(s.Presentacion,'0008') as Presentacion ,
+		s.Cantidad,s.PrecioCompra,s.PrecioVentaGeneral,
+		s.UnidadVenta,s.Lote,s.Inventario,i.Operacion,s.Impuesto,s.ValorInventario
+		from SuministroTB as s inner join ImpuestoTB as i on s.Impuesto = i.IdImpuesto
 		where Clave = @search
 	end
 go
