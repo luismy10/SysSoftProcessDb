@@ -78,7 +78,7 @@ as
 		v.IdVenta,
 		v.FechaVenta,
 		v.HoraVenta,
-		c.Apellidos + ' '+c.Nombres as Cliente,
+		c.Informacion as Cliente,
 		td.Nombre as Comprobante,
 		v.Serie,v.Numeracion,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
@@ -92,12 +92,8 @@ as
 		where 
 		(v.Vendedor = @Vendedor and @search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) and @opcion = 1)
 		OR (v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
-		OR (
-			(v.Vendedor = @Vendedor and @search <> '' AND CONCAT(c.Apellidos,'',c.Nombres) LIKE @search+'%' and @opcion = 1)
-			OR
-			(v.Vendedor = @Vendedor and @search <> '' AND CONCAT(c.Nombres,' ',c.Apellidos) LIKE @search+'%' and @opcion = 1)
-		)
-
+		OR (v.Vendedor = @Vendedor and @search <> '' AND c.Informacion LIKE @search+'%' and @opcion = 1)
+		
 		OR
 		(v.Vendedor = @Vendedor and
 			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0
@@ -339,17 +335,20 @@ ALTER procedure Sp_Obtener_Venta_ById
 @idVenta varchar(12)
 as
 	begin
-		select  v.FechaVenta,v.HoraVenta,dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,c.NumeroDocumento,c.Apellidos,c.Nombres,c.Direccion,
+		select  v.FechaVenta,v.HoraVenta,dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,c.NumeroDocumento,c.Informacion,c.Direccion,
 		t.Nombre as Comprobante,t.NombreImpresion,
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Total,v.Codigo
+		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Total,v.Codigo
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
         where v.IdVenta = @idVenta
 	end
+go
+
+select * from MonedaTB
 go
 
 create table CuentasClienteTB(

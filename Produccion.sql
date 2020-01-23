@@ -22,7 +22,10 @@ create table SuministroTB(
 	IdSuministro varchar(12) primary key not null,
 	Origen int not null,
 	Clave varchar(45) not null,
-	ClaveAlterna varchar(45) null,
+	ClaveAlterna varchar(45) null,3
+	0 
+
+
 	NombreMarca varchar(120) not null,
 	NombreGenerico varchar(120) null,
 	Categoria int null,
@@ -142,11 +145,11 @@ go
 select * from SuministroTB
 go
 
-create procedure Sp_Listar_Suministro_Paginacion
+ALTER procedure [dbo].[Sp_Listar_Suministro_Paginacion]
 @paginacion int
 as
 	begin	
-		select IdSuministro,Clave,ClaveAlterna,NombreMarca,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+		select IdSuministro,Clave,ClaveAlterna,NombreMarca,NombreGenerico,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
 		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		PrecioCompra,Impuesto,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
 		Inventario,ValorInventario,Imagen 
@@ -154,6 +157,7 @@ as
 		order by IdSuministro asc
 		offset @paginacion rows fetch next 20 rows only
 	end
+
 go
 
 
@@ -165,7 +169,7 @@ ALTER procedure Sp_Listar_Suministros
 @Marca int
 as
 	begin
-		select IdSuministro,Clave,ClaveAlterna,NombreMarca,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+		select IdSuministro,Clave,ClaveAlterna,NombreMarca,NombreGenerico,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
 		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		PrecioCompra,Impuesto,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
 		Inventario,ValorInventario,Imagen 
@@ -248,7 +252,9 @@ create function [dbo].[Fc_Suministro_Codigo_Alfanumerico] ()  returns varchar(12
 		end
 go
 
-
+/*
+quitar 2 campos
+*/
 
 create table KardexSuministroTB
 (
@@ -259,18 +265,21 @@ create table KardexSuministroTB
 	Tipo tinyint not null,
 	Movimiento int not null,
 	Detalle varchar(100) not null,
-	Cantidad decimal(18,4) not null,
-	CUnitario decimal(18,4) not null,
-	CTotal decimal(18,4) not null,
+	Cantidad decimal(18,8) not null,
+	--CUnitario decimal(18,4) not null,
+	--CTotal decimal(18,4) not null,
 	primary key(IdKardex,IdSuministro)
 )
+go
+
+select * from KardexSuministroTB
 go
 
 alter procedure Sp_Listar_Kardex_Suministro_By_Id
 @idArticulo varchar(45)
 as
 SELECT k.IdSuministro,k.Fecha,k.Hora,k.Tipo,t.Nombre,
-k.Detalle,k.Cantidad,k.CUnitario,k.CTotal
+k.Detalle,k.Cantidad
 FROM KardexSuministroTB AS k INNER JOIN SuministroTB AS a ON k.IdSuministro = a.IdSuministro
 inner join TipoMovimientoTB AS t ON k.Movimiento = t.IdTipoMovimiento
 WHERE 
@@ -284,10 +293,10 @@ GO
 --- por ocaciones
 truncate table SuministroTB
 go
+truncate table PreciosTB
+go
 --
 truncate table KardexSuministroTB
-go
-truncate table PreciosTB
 go
 truncate table MovimientoInventarioTB
 go

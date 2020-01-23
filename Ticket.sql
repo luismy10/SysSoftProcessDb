@@ -24,6 +24,3 @@ go
 
 select * from TicketTB
 go
-
-
-
