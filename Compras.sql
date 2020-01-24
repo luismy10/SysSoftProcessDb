@@ -9,6 +9,7 @@ go
  Modificado SubTotal, Descuento y Total a 4 decimales 16/02/19
  Agregado campos(s) Observaciones y Notas 16/02/19
  Agrego campos TipoCompra y EstadoCompra 28/02/2019
+
 */
 create table CompraTB
 (
@@ -147,6 +148,8 @@ go
  Actulizado campos PrecioVenta, Margen  y Utilidad a PrecioVenta1, Margen1 y Utilidad1 22/02719
  Agregado campos PrecioVenta2, Margen2, Utilidad2, PrecioVenta3, Margen3 y Utilidad3 22/02719
 
+ quitar los campos de precio
+
 */
 
 select * from DetalleCompraTB
@@ -160,9 +163,9 @@ create table DetalleCompraTB
 	PrecioCompra decimal(18,4) not null,
 	Descuento decimal(18,4) null,
 
-	PrecioVenta1 decimal(18,4) null,
-	Margen1 tinyint null,
-	Utilidad1 decimal(18,4) null,
+	--PrecioVenta1 decimal(18,4) null,
+	--Margen1 tinyint null,
+	--Utilidad1 decimal(18,4) null,
 
 	--PrecioVenta2 decimal(18,4) null,
 	--Margen2 tinyint null,

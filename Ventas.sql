@@ -278,15 +278,15 @@ go
 
 Sp_Reporte_General_Ventas '2019/11/24','2019/12/05',0,'',''
 
-alter procedure Sp_Reporte_General_Ventas 
+ALTER procedure [dbo].[Sp_Reporte_General_Ventas] 
 @FechaInicial varchar(20),
 @FechaFinal varchar(20),
 @TipoDocumento int,
 @Cliente varchar(12),
 @Empleado varchar(12)
 as
-	select td.Nombre,v.FechaVenta,concat(c.Apellidos,' ',c.Nombres) as Cliente,v.Serie,v.Numeracion,
-	dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
+	select td.Nombre,v.FechaVenta,c.Informacion as Cliente,v.Serie,v.Numeracion,
+	dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,v.Estado,dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') EstadoName,
 	dbo.Fc_Obtener_Simbolo_Moneda(v.Moneda) as Simbolo,v.Total 
 	from VentaTB as v inner join TipoDocumentoTB as td on v.Comprobante = td.IdTipoDocumento
 	inner join ClienteTB as c on v.Cliente = c.IdCliente

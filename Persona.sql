@@ -25,7 +25,7 @@ create table ClienteTB(
 	Celular varchar(20) null,
 	Email varchar(100) null,
 	Direccion varchar(200) null,
-	Representante varchar(200) null,
+	Representante varchar(200) null
 	Estado int not null,
 	--UsuarioRegistro varchar(50) null,
 	--FechaRegistro datetime null,
