@@ -7,23 +7,25 @@ QUITAR LOS CAMPOS USUARIO DE REGISTRO
 QUITAR LOS CAMPOS FECHA DE REGISTRO
 QUITAR LOS CAMPOS USUARIO ACTUALIZO
 QUITAR LOS CAMPOS FECHA ACTUALIZO
-
+QUITAR LOS CAMPOS APELLIDOS, NOMBRES, SEXO, FECHANACIMIENTO
 AGREGAR EL CAMPO REPRESENTANTE
+AGREGAR EL CAMPO INFORMACION
 */
 
 create table ClienteTB(
 	IdCliente varchar(12) not null,
 	TipoDocumento int not null,
 	NumeroDocumento varchar(20) not null,
-	Apellidos varchar(50) not null,
-	Nombres varchar(50) not null,
-	Sexo int null,
-	FechaNacimiento date null,
+	Informacion varchar(100) not null,
+	--Apellidos varchar(50) not null,
+	--Nombres varchar(50) not null,
+	--Sexo int null,
+	--FechaNacimiento date null,
 	Telefono varchar(20) null,
 	Celular varchar(20) null,
 	Email varchar(100) null,
 	Direccion varchar(200) null,
-	Representante varchar(200) null,
+	Representante varchar(200) null
 	Estado int not null,
 	--UsuarioRegistro varchar(50) null,
 	--FechaRegistro datetime null,
@@ -45,38 +47,30 @@ go
 alter procedure Sp_Listar_Clientes
 @search varchar(55)
 as
-select ci.IdCliente,ci.NumeroDocumento,ci.Apellidos,ci.Nombres,ci.Telefono,
+select ci.IdCliente,ci.NumeroDocumento,ci.Informacion,ci.Telefono,
 ci.Celular,ci.Direccion,ci.Representante,dbo.Fc_Obtener_Nombre_Detalle(ci.Estado,'0001') as Estado
 from ClienteTB as ci 
 where
 	(@search = '')  
 	or 
 	(ci.NumeroDocumento like @search+'%')
-	or 
-	(
-		(CONCAT(ci.Apellidos,' ',ci.Nombres) LIKE @search+'%')
-		or
-		(CONCAT(ci.Nombres,' ',ci.Apellidos) LIKE @search+'%')			
-	)
+	OR
+	(ci.Informacion LIKE @search+'%')
+	
 go 
 
 ALTER procedure Sp_Listar_Clientes_Venta
 @search varchar(55)
 as
 select ci.IdCliente,dbo.Fc_Obtener_Nombre_Detalle(TipoDocumento,'0003') as Documento,ci.NumeroDocumento,
-ci.Apellidos,ci.Nombres,ci.Direccion
+ci.Informacion,ci.Direccion
 from ClienteTB as ci
 where 
 	(@search = '')  
 	or 
 	(ci.NumeroDocumento like @search+'%')
 	or 
-	(
-		(CONCAT(ci.Apellidos,' ',ci.Nombres) LIKE @search+'%')
-		or
-		(CONCAT(ci.Nombres,' ',ci.Apellidos) LIKE @search+'%')
-	)
-
+	(ci.Informacion LIKE @search+'%')
 go
 
 Sp_Get_Cliente_By_Id '78945612'
@@ -86,8 +80,7 @@ alter procedure Sp_Get_Cliente_By_Id
 @NumeroDocumento varchar(20)
 as
 	begin
-		select ci.IdCliente,ci.TipoDocumento,ci.NumeroDocumento,ci.Apellidos,
-		ci.Nombres,ci.Sexo,ci.FechaNacimiento,
+		select ci.IdCliente,ci.TipoDocumento,ci.NumeroDocumento,ci.Informacion,
 		ci.Telefono,ci.Celular,ci.Email,ci.Direccion,ci.Representante,ci.Estado
 		from ClienteTB as ci
 		where ci.NumeroDocumento = @NumeroDocumento
@@ -129,9 +122,7 @@ if exists(select NumeroDocumento from PersonaTB where NumeroDocumento = @NumeroD
 		else
 			begin
 				print 'no existe'
-			end
-		
-					
+			end	
 	end
 else
 		begin
@@ -139,14 +130,12 @@ else
 		end
 go
 
+
 alter procedure Sp_Crud_Persona_Cliente
 	@IdCliente varchar(12),
 	@TipoDocumento int,
 	@NumeroDocumento varchar(20),
-	@Apellidos varchar(50),
-	@Nombres varchar(50),
-	@Sexo int,
-	@FechaNacimiento date,
+	@Informacion varchar(100),
 	@Telefono varchar(20),
 	@Celular varchar(20) ,
 	@Email varchar(100) ,
@@ -167,8 +156,7 @@ as
 							end
 						else
 							begin								
-								update ClienteTB set TipoDocumento=@TipoDocumento,NumeroDocumento=@NumeroDocumento,Apellidos=UPPER(@Apellidos),Nombres=UPPER(@Nombres),
-								Sexo=@Sexo,FechaNacimiento=@FechaNacimiento,
+								update ClienteTB set TipoDocumento=@TipoDocumento,NumeroDocumento=@NumeroDocumento,Informacion=UPPER(@Informacion),
 								Telefono=@Telefono,Celular=@Celular,Email=@Email,Direccion=@Direccion,Representante=@Representante,Estado=@Estado
 								where IdCliente = @IdCliente
 								commit
@@ -180,8 +168,8 @@ as
 						declare @codCliente varchar(12)		
 						set @codCliente = dbo.Fc_Cliente_Codigo_Alfanumerico()
 
-						insert into ClienteTB(IdCliente,TipoDocumento,NumeroDocumento,Apellidos,Nombres,Sexo,FechaNacimiento,Telefono,Celular,Email,Direccion,Representante,Estado) 
-						values(@codCliente,@TipoDocumento,@NumeroDocumento,UPPER(@Apellidos),UPPER(@Nombres),@Sexo,@FechaNacimiento,@Telefono,@Celular,@Email,@Direccion,@Representante,@Estado)
+						insert into ClienteTB(IdCliente,TipoDocumento,NumeroDocumento,Informacion,Telefono,Celular,Email,Direccion,Representante,Estado) 
+						values(@codCliente,@TipoDocumento,@NumeroDocumento,UPPER(@Informacion),@Telefono,@Celular,@Email,@Direccion,@Representante,@Estado)
 
 						commit 
 						set @Message = 'registered'						
