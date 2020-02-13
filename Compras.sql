@@ -67,6 +67,7 @@ select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdP
 			c.FechaCompra,c.HoraCompra,c.Numeracion,
 			p.NumeroDocumento,p.RazonSocial,
 			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
+			c.EstadoCompra,
 			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
 			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total
 			from CompraTB as c inner join ProveedorTB as p
@@ -225,6 +226,9 @@ go
 select * from PlazosTB
 go
 
+select dbo.Fc_Obtener_Nombre_Detalle(p.TipoDocumento,'0003') as NombreDocumento,p.NumeroDocumento,p.RazonSocial,p.Direccion,p.Telefono,p.Celular,p.Email from CompraTB as c inner join ProveedorTB as p on c.Proveedor = p.IdProveedor where c.IdCompra = 'CP0002'
+go
+
 ALTER procedure Sp_Listar_Compra_Credito_Por_IdCompra
 @IdCompra varchar(12)
 as
@@ -261,26 +265,39 @@ as
 go
 
 
-CREATE procedure [dbo].[Sp_Reporte_General_Compras] 
+alter procedure [dbo].[Sp_Reporte_General_Compras] 
 @FechaInicial varchar(20),
 @FechaFinal varchar(20),
 @TipoDocumento int,
-@Proveedor varchar(12)
+@Proveedor varchar(12),
+@TipoCompra int
 as
 	select td.Nombre,c.FechaCompra,p.RazonSocial as Proveedor,c.Numeracion,
-	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,c.EstadoCompra,dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') EstadoName,
+	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,c.EstadoCompra,
+	dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') EstadoName,
 	dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total 
 	from CompraTB as c inner join TipoDocumentoTB as td on c.Comprobante = td.IdTipoDocumento
 	inner join ProveedorTB as p on c.Proveedor = p.IdProveedor
 
 	where
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND @Proveedor ='')
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND @Proveedor ='' AND @TipoCompra = 0)
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND @Proveedor ='')
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND @Proveedor ='' AND @TipoCompra = 0)
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND p.IdProveedor = @Proveedor)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND p.IdProveedor = @Proveedor AND @TipoCompra = 0)
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND p.IdProveedor = @Proveedor)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND @Proveedor ='' AND c.TipoCompra = @TipoCompra)
+	-----------------------------------------------------------------------------------------------------------------------------------------
+	or
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND p.IdProveedor = @Proveedor AND @TipoCompra = 0)
+	or
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND @Proveedor = 0 AND c.TipoCompra = @TipoCompra)
+	or
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND p.IdProveedor = @Proveedor AND c.TipoCompra = @TipoCompra)
+	or
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND p.IdProveedor = @Proveedor AND c.TipoCompra = @TipoCompra)
+	-----------------------------------------------------------------------------------------------------------------------------------------
+	
 	order by c.FechaCompra desc,c.HoraCompra desc
 go
 
@@ -345,13 +362,13 @@ CREATE TABLE LoteTB (
 )
 go
 
-
-ALTER procedure Sp_Obtener_Compra_ById
+ALTER procedure [dbo].[Sp_Obtener_Compra_ById]
 @IdCompra varchar(12)
 as
 	select c.FechaCompra, c.HoraCompra,c.Comprobante, c.Numeracion,
 	m.Nombre,m.Simbolo,
 	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') as Tipo,
+	c.EstadoCompra,
 	dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') as Estado,
 	c.Total,c.Observaciones,c.Notas,td.Nombre 
 	from CompraTB as c inner join MonedaTB as m on c.TipoMoneda = m.IdMoneda
