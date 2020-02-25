@@ -1,46 +1,74 @@
 use [PuntoVentaSysSoftDBDesarrollo]
 go
 
+/*
+tabla alterada 18/02/2020
+*/
+
 create table ComprobanteTB(
-	Serie varbinary(2) not null,
+	IdTipoDocumento int,
+	Serie varchar(10) not null,
 	Numeracion varchar(16) not null,
-	FechaRegistro datetime not null
-	primary key(Serie,Numeracion),
+	FechaRegistro date not null
+	primary key(Serie,Numeracion)
 )
 go
 
 insert into ComprobanteTB(Serie,Numeracion,FechaRegistro) values(0xAFFF,'99999997',GETDATE())
 go
-
+--esa tabla tiene que cambiar ayer has echo te acuerdas algo
+--se borro hacer de nuevo que cambios se necesita
 
 SELECT * FROM ComprobanteTB
 GO
 
+--
+--con el combo box vamos elejir que tipo de documento es
+declare @Serie varchar(10),@Numeracion varchar(16),@ResultNumeracion varchar(16)
+declare @AuxNumeracion varchar(16),@Aumentado int
+set @Serie = (select Serie from TipoDocumentoTB where IdTipoDocumento = 2)
+set @Numeracion = (select Numeracion from ComprobanteTB where Serie = @Serie)
+if LEN(@Numeracion)>0
+	begin
+		set @AuxNumeracion = (select Max(Numeracion) from ComprobanteTB  where Serie = @Serie)
+		set @Aumentado = CONVERT(INT,@AuxNumeracion) +1
+		set @ResultNumeracion = '' +replicate ('0',(8 - len(@Aumentado))) + convert(varchar, @Aumentado)
+		print @ResultNumeracion
+	end
+else
+	begin
+		set @ResultNumeracion = '00000001'
+		print @ResultNumeracion
+	end
+go
+--
 truncate table [dbo].[ComprobanteTB]
 go
 
 PRINT dbo.Fc_Serie_Numero_Generado()
 GO
-
-
+/*
+eliminada Fc_Serie_Numero 18/02/2020
+*/
 alter function Fc_Serie_Numero(@tipo varchar(12)) returns varchar(40)
 as
 begin
+
 	declare @serie varchar(8), @resultSerie varchar(8),@numeracion varchar(16),@resulNumeracion varchar(16)
 	declare @numero int
 	declare @ValorActual varchar(16)
-
 	declare @Length int,@Incremental int,@ActualValor varchar(12),@ValorNuevo varchar(12)
 
 	if(@tipo = 'boleta')
 		begin
 			set @serie = (select Max(serie_b) from ComprobanteTB)
+			print @serie
 			set @numeracion = (select Max(Numeracion) from ComprobanteTB where serie_b = @serie)
 
 			if (LEN(@serie) > 0  and LEN(@numeracion) > 0)
 				begin
 					set @ValorActual = @numeracion
-
+					--oeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 					if(@ValorActual < 99999999)
 						begin
 							set @resultSerie = (select Max(serie_b) from ComprobanteTB)
@@ -135,11 +163,16 @@ begin
 		begin
 			set @serie = (select Max(serie_t) from ComprobanteTB)
 			set @numeracion = (select Max(Numeracion) from ComprobanteTB where serie_t = @serie)
+			/*
+			9999
+			1
+			*/
 
 			if (LEN(@serie) > 0  and LEN(@numeracion) > 0)
 				begin
-					set @ValorActual = @numeracion
-
+				--
+			set @ValorActual = @numeracion
+					
 					if(@ValorActual < 99999999)
 						begin
 							set @resultSerie = (select Max(serie_t) from ComprobanteTB)
@@ -147,8 +180,9 @@ begin
 							set @numero = CONVERT(INT,@ValorActual) +1
 
 							set @resulNumeracion = '' +replicate ('0',(8 - len(@numero))) + convert(varchar, @numero)
-					
-						end
+							
+							print @resulNumeracion
+						--end
 					else
 						begin
 							set @serie = (select Max(serie_t) from ComprobanteTB)
@@ -187,13 +221,4 @@ end
 
 
 go
-
-
-
-
-select dbo.Fc_Serie_Numero('boleta') as serial
-select dbo.Fc_Serie_Numero('factura') as serial
-select dbo.Fc_Serie_Numero('ticket') as serial
-
-truncate table [dbo].[ComprobanteTB]
 
