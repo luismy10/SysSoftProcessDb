@@ -391,3 +391,22 @@ alter procedure Sp_Listar_CuentasHistorial_By_IdCuenta
 as
 	select IdCuentasHistorialCliente,FechaAbono,Abono,Referencia from CuentasHistorialClienteTB where IdCuentaClientes = @IdCuentaClientes
 go
+
+use PuntoVentaSysSoftDBDesarrollo
+go
+
+/*
+	crear tabla forma de pago para guardar las formas de pago :v
+	26 febrero 2020
+*/
+create table FormaPagoTB(
+	IdFormaPago int not null identity,
+	IdVenta varchar(12) not null,
+	Nombre varchar(12) null,
+	Monto decimal(18,8) not null,
+	primary key (IdFormaPago,IdVenta )
+)
+go
+
+select * from FormaPagoTB
+go
