@@ -17,18 +17,20 @@ create table CajaTB(
 	Calculado decimal(18,4) null,
 	Diferencia decimal(18,4) null,
 	IdUsuario varchar(12) not null,
-	FechaRegistro date not null,
-	HoraRegistro time not null
+	--FechaRegistro date not null,
+	--HoraRegistro time not null
+	IdBanco varchar(12)
+
 )
 go
+
+Alter table CajaTB add  IdBanco varchar (12)
 
 
 select * from CajaTB
 go
 SELECT * FROM MovimientoCajaTB
 GO
-
-
 
 drop procedure Sp_Aperturar_Caja
 @IdCajaTrabajador int,

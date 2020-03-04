@@ -16,6 +16,10 @@ create table Banco(
 )
 go
 
+/*
+	Asigancion = false
+*/
+
 select * from Banco
 go
 
