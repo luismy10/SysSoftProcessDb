@@ -31,7 +31,7 @@ select * from CajaTB
 go
 SELECT * FROM MovimientoCajaTB
 GO
-
+/*
 drop procedure Sp_Aperturar_Caja
 @IdCajaTrabajador int,
 @MontoInicial decimal(18,2),
@@ -41,8 +41,8 @@ drop procedure Sp_Aperturar_Caja
 as
 insert into CajaTB(IdCajaTrabajador,MontoInicial,MontoFinal,Estado,Fecha)
 values(@IdCajaTrabajador,@MontoInicial,@MontoFinal,@Estado,@Fecha)
-
 go
+*/
 
 select sum(MontoFinal) as 'Ventas Totales' from CajaTB where IdEmpleado = 'EM0001' and Estado = 'activo'
 go
@@ -91,16 +91,13 @@ go
 
 truncate table CajaTB
 go
-truncate table MovimientoCajaTB
-go
-
 
 select * from CajaTB
 go
-SELECT * FROM MovimientoCajaTB
-GO
 
-create table MovimientoCajaTB(
+
+/*
+drop table MovimientoCajaTB(
 	IdMovimientoCaja int identity(1,1) not null,
 	IdCaja varchar(12) not null,
 	IdUsuario varchar(12) not null,
@@ -114,9 +111,11 @@ create table MovimientoCajaTB(
 	primary key(IdMovimientoCaja,IdCaja)
 )
 go
+*/
 
 
-alter procedure Sp_Lista_Movimiento_Caja_ById 
+/*
+drop procedure Sp_Lista_Movimiento_Caja_ById 
 @IdCaja varchar(12)
 as
 	begin
@@ -124,6 +123,7 @@ as
 		 from MovimientoCajaTB as m where IdCaja = @IdCaja order by m.FechaMovimiento asc
 	end
 go
+*/
 
 
 alter function [dbo].[Fc_Caja_Codigo_Alfanumerico] ()  returns varchar(12)
@@ -161,6 +161,7 @@ alter function [dbo].[Fc_Caja_Codigo_Alfanumerico] ()  returns varchar(12)
 		end
 go
 
+/*
 create function [dbo].[Fc_Lista_Caja_Codigo_Alfanumerico] ()  returns varchar(12)
 	as
 		begin
@@ -195,3 +196,4 @@ create function [dbo].[Fc_Lista_Caja_Codigo_Alfanumerico] ()  returns varchar(12
 			return @CodGenerado
 		end
 go
+*/

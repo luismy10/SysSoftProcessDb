@@ -1,6 +1,8 @@
 use [PuntoVentaSysSoftDBDesarrollo]
 go
 
+
+
 create table Banco(
 	IdBanco varchar(12) not null,
 	NombreCuenta varchar(80) not null,
@@ -10,11 +12,15 @@ create table Banco(
 	FechaCreacion date not null,
 	HoraCreacion time not null,
 	Descripcion varchar(200) null,
-	Sistema bit not null
+	Sistema bit not null,
+	FormaPago smallint
 	primary key(IdBanco)
 
 )
 go
+
+/* creacion de columna Forma Pago 17/03/20*/
+Alter table Banco add FormaPago smallint 
 
 /*
 	Asigancion = false
@@ -34,7 +40,8 @@ AS
       ,dbo.Fc_Obtener_Simbolo_Moneda(IdMoneda) as Simbolo
       ,SaldoInicial
       ,Descripcion
-	  ,Sistema 
+	  ,Sistema
+	  ,FormaPago
 	  FROM Banco
 	  WHERE 
 	  (@search = '')
@@ -83,9 +90,11 @@ CREATE function Fc_Banco_Codigo_Alfanumerico ()  returns varchar(12)
 		end
 go
 
+/*Se actualizó la tabla BancoHistorialTB, la columna IdBancoHistorial para que sea autoincremental 18/03/2020*/
+
 create table BancoHistorialTB(
 	IdBanco varchar(12) not null,
-	IdBancoHistorial varchar(12) not null,
+	IdBancoHistorial int not null identity,
 	IdProcedencia varchar(12) not null,
 	Descripcion varchar(100) not null,
 	Fecha date not null,
@@ -96,10 +105,13 @@ create table BancoHistorialTB(
 )
 go
 
+
+
 print dbo.Fc_Banco_Historial_Codigo_Alfanumerico()
 go
 
-CREATE function Fc_Banco_Historial_Codigo_Alfanumerico ()  returns varchar(12)
+/*Funcion borrada por que le dio coronavirus 18/03/2020*/
+drop function Fc_Banco_Historial_Codigo_Alfanumerico ()  returns varchar(12)
 	as
 		begin
 		declare @Incremental int,@ValorActual varchar(12),@CodGenerado varchar(12)
@@ -148,4 +160,6 @@ select * from BancoHistorialTB
 go
 
 truncate table Banco
+go
 truncate table BancoHistorialTB
+go

@@ -5,6 +5,7 @@ select * from VentaTB
 go 
 
 
+
 /*
 se agrega la columna moneda int
 se cambio al campo estado de tipo de dato de un varchar a un int
@@ -225,6 +226,8 @@ go
 truncate table CuentasClienteTB
 go
 truncate table CuentasHistorialClienteTB
+go
+truncate table FormaPagoTB
 go
 
 select * from VentaTB

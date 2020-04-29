@@ -19,9 +19,6 @@ go
 --esa tabla tiene que cambiar ayer has echo te acuerdas algo
 --se borro hacer de nuevo que cambios se necesita
 
-SELECT * FROM ComprobanteTB
-GO
-
 --
 --con el combo box vamos elejir que tipo de documento es
 declare @Serie varchar(10),@Numeracion varchar(16),@ResultNumeracion varchar(16)
@@ -42,6 +39,10 @@ else
 	end
 go
 --
+
+SELECT * FROM ComprobanteTB
+GO
+
 truncate table [dbo].[ComprobanteTB]
 go
 
