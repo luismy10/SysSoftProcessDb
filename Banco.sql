@@ -2,7 +2,6 @@ use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 
-
 create table Banco(
 	IdBanco varchar(12) not null,
 	NombreCuenta varchar(80) not null,

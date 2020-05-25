@@ -308,6 +308,13 @@ WHERE
 	order by k.Fecha,k.Hora asc
 GO
 
+/*
+	movimiento
+	tipo de ajuste -> 1: incremento - 2: decremento
+	tipo de movimiento -> 1: entrada - 2: devolución - 3: salida - 4: ajuste 
+
+*/
+
 --- por ocaciones
 truncate table SuministroTB
 go
@@ -325,12 +332,9 @@ go
 truncate table AsignacionDetalleTB
 go
 
-update SuministroTB set Cantidad = 0 where IdSuministro = 'SM3761'
-go
-
 select * from SuministroTB
 go
-select * from KardexSuministroTB where IdSuministro = 'SM3762'
+select * from KardexSuministroTB
 go
 select * from PreciosTB
 go
