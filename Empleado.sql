@@ -88,6 +88,19 @@ create function Fc_Empleado_Codigo_Alfanumerico()  returns varchar(12)
 		end
 go
 
+alter function [dbo].Fc_Obtener_Datos_Empleado
+(
+@IdEmpleado varchar(12)
+) returns varchar(100)
+
+as
+	begin
+		declare @datos varchar(100)
+		set @datos=	(select Apellidos+' '+Nombres from EmpleadoTB where IdEmpleado = @IdEmpleado)
+		return @datos
+	end
+go
+
 --administrador
 ----
 --caja

@@ -90,10 +90,12 @@ CREATE function Fc_Banco_Codigo_Alfanumerico ()  returns varchar(12)
 go
 
 /*Se actualizó la tabla BancoHistorialTB, la columna IdBancoHistorial para que sea autoincremental 18/03/2020*/
+/*Se agrego la tabla BancoHistorialTB, la columna IdEmpleado para que sea autoincremental 26/05/2020*/
 
 create table BancoHistorialTB(
 	IdBanco varchar(12) not null,
 	IdBancoHistorial int not null identity,
+	IdEmpleado varchar(12) not null,
 	IdProcedencia varchar(12) not null,
 	Descripcion varchar(100) not null,
 	Fecha date not null,
@@ -149,7 +151,7 @@ alter procedure Sp_Listar_Banco_Historial
 @IdBanco varchar(12)
 as
 	begin
-		select IdBanco,Descripcion,Fecha,Hora,Entrada,Salida from BancoHistorialTB where IdBanco = @IdBanco
+		select IdBanco,[dbo].Fc_Obtener_Datos_Empleado(IdEmpleado) as Empleado,Descripcion,Fecha,Hora,Entrada,Salida from BancoHistorialTB where IdBanco = @IdBanco
 	end
 go
 

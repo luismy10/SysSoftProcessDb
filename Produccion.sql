@@ -167,7 +167,7 @@ ALTER procedure [dbo].[Sp_Listar_Suministro_Paginacion]
 @paginacion int
 as
 	begin	
-		select IdSuministro,Clave,ClaveAlterna,NombreMarca,NombreGenerico,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+		select IdSuministro,Clave,ClaveAlterna,NombreMarca,NombreGenerico,StockMinimo,StockMaximo,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
 		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		PrecioCompra,Impuesto,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
 		Inventario,ValorInventario,Imagen 
@@ -187,7 +187,7 @@ ALTER procedure Sp_Listar_Suministros
 @Marca int
 as
 	begin
-		select IdSuministro,Clave,ClaveAlterna,NombreMarca,NombreGenerico,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
+		select IdSuministro,Clave,ClaveAlterna,NombreMarca,NombreGenerico,StockMinimo,StockMaximo,Cantidad,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompraNombre,
 		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		PrecioCompra,Impuesto,PrecioVentaGeneral,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
 		Inventario,ValorInventario,Imagen 
