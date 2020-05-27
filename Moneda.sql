@@ -1,7 +1,6 @@
 use PuntoVentaSysSoftDBDesarrollo
 go
 
-
 create table MonedaTB(
 	IdMoneda int identity not null,
 	Nombre varchar(100) not null,
@@ -12,7 +11,6 @@ create table MonedaTB(
 	primary key(IdMoneda)
 )
 go
-
 
 create procedure Sp_Listar_Monedas
 as
