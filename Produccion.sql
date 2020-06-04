@@ -116,11 +116,12 @@ alter procedure Sp_Listar_Suministro_By_Search
 as
 	begin
 		select s.IdSuministro,s.Clave,s.NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(s.Marca,'0007') as Marca,
-		dbo.Fc_Obtener_Nombre_Detalle(s.Presentacion,'0008') as Presentacion ,
+		dbo.Fc_Obtener_Nombre_Detalle(s.Presentacion,'0008') as Presentacion,
 		s.Cantidad,s.PrecioCompra,s.PrecioVentaGeneral,
-		s.UnidadVenta,s.Lote,s.Inventario,i.Operacion,s.Impuesto,s.ValorInventario
+		dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
+		s.UnidadVenta,s.Lote,s.Inventario,i.Operacion,s.Impuesto,s.ValorInventario		
 		from SuministroTB as s inner join ImpuestoTB as i on s.Impuesto = i.IdImpuesto
-		where Clave = @search
+		where (Clave <> '' and Clave = @search) or (ClaveAlterna <> '' and ClaveAlterna = @search)
 	end
 go
 

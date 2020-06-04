@@ -8,6 +8,7 @@ create table MonedaTB(
 	Simbolo varchar(10) not null,
 	TipoCambio decimal(18,4) not null,
 	Predeterminado bit not null,
+	Sistema bit not null,
 	primary key(IdMoneda)
 )
 go
@@ -17,6 +18,9 @@ as
 	begin
 		select IdMoneda,Nombre,Abreviado,Simbolo,TipoCambio,Predeterminado from MonedaTB
 	end
+go
+
+select * from MonedaTB
 go
 
 
