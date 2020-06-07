@@ -239,9 +239,9 @@ as
 		where (@Producto = '' and @Existencia = 0 and Inventario = 1)
 		or (Clave <> '' and Clave = @Producto and @Existencia = 0 and Inventario = 1 )
 		or (ClaveAlterna <> '' and ClaveAlterna = @Producto and @Existencia = 0 and Inventario = 1)
-		or (@Existencia = 1 and Cantidad <= 0)
-		or (@Existencia = 2 and Cantidad > 0)
-		or (@Existencia = 3 and Cantidad > 0 and Cantidad <= StockMinimo)
+		or (@Producto = '' and @Existencia = 1 and Cantidad <= 0)
+		or (@Producto = '' and @Existencia = 2 and Cantidad > 0)
+		or (@Producto = '' and @Existencia = 3 and Cantidad > 0 and Cantidad <= StockMinimo)
 		order by Cantidad asc
 	end
 go
