@@ -223,16 +223,27 @@ as
 	end
 go
 
-create procedure Sp_Listar_Inventario_Suministros
+alter procedure Sp_Listar_Inventario_Suministros
+@Producto varchar(45),
+@Existencia tinyint
 as
-	select
-	IdSuministro,Clave,NombreMarca,PrecioCompra,
-	Cantidad,
-	dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
-	dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
-	(PrecioCompra*Cantidad) as Total 
-	from SuministroTB 
-	where Inventario = 1 order by Total desc
+	begin
+		select
+		IdSuministro,Clave,NombreMarca,PrecioCompra,
+		PrecioVentaGeneral,Cantidad,
+		dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
+		dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
+		(PrecioCompra*Cantidad) as Total,
+		StockMinimo,StockMaximo 
+		from SuministroTB 
+		where (@Producto = '' and @Existencia = 0 and Inventario = 1)
+		or (Clave <> '' and Clave = @Producto and @Existencia = 0 and Inventario = 1 )
+		or (ClaveAlterna <> '' and ClaveAlterna = @Producto and @Existencia = 0 and Inventario = 1)
+		or (@Existencia = 1 and Cantidad <= 0)
+		or (@Existencia = 2 and Cantidad > 0)
+		or (@Existencia = 3 and Cantidad > 0 and Cantidad <= StockMinimo)
+		order by Cantidad asc
+	end
 go
 
 go
