@@ -226,6 +226,13 @@ go
 select * from PlazosTB
 go
 
+
+select sum(Total) as 'totalcontado' from CompraTB where TipoCompra = 1 and FechaCompra = '10-06-2020'
+go
+
+select sum(Total) as 'totalcredito' from CompraTB where TipoCompra = 2 and FechaCompra = '10-06-2020'
+go
+
 select dbo.Fc_Obtener_Nombre_Detalle(p.TipoDocumento,'0003') as NombreDocumento,p.NumeroDocumento,p.RazonSocial,p.Direccion,p.Telefono,p.Celular,p.Email from CompraTB as c inner join ProveedorTB as p on c.Proveedor = p.IdProveedor where c.IdCompra = 'CP0002'
 go
 
