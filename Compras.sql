@@ -344,6 +344,36 @@ on d.IdArticulo = s.IdSuministro
 where d.IdCompra = @IdCompra
 go
 
+alter procedure Sp_Compra_For_Editar
+@IdCompra varchar(12)
+as
+	begin
+		select IdCompra,Proveedor,
+		dbo.Fc_Obtener_Datos_Proveedor(Proveedor)as DatosProveedor,
+		FechaCompra,Serie,Numeracion,TipoMoneda,Observaciones,Notas 
+		from CompraTB WHERE IdCompra = @IdCompra
+	end
+go
+
+create procedure Sp_Detalle_Compra_For_Editar
+@IdCompra varchar(12)
+as
+	begin
+		select d.IdArticulo,s.Clave,s.NombreMarca,d.Cantidad,d.PrecioCompra,
+		d.Descuento,d.Importe,d.IdImpuesto,d.NombreImpuesto,d.ValorImpuesto,d.Descripcion 
+		from DetalleCompraTB as d inner join SuministroTB as s on d.IdArticulo = s.IdSuministro 
+		where d.IdCompra = @IdCompra
+	end
+go
+
+select * from DetalleCompraTB
+go
+
+
+truncate table monedatb;
+truncate table empresatb;
+truncate table empleadotb;
+
 
 -- Borrado TipoLote, FechaFabricacion (15/02/19)
 
