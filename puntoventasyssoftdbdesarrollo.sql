@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-06-2020 a las 00:04:56
+-- Tiempo de generación: 19-06-2020 a las 04:28:45
 -- Versión del servidor: 10.4.11-MariaDB
 -- Versión de PHP: 7.4.6
 
@@ -1443,28 +1443,22 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `fc_rol_generar_codigo` () RETURNS IN
 		return CodGenerado;
 END$$
 
-CREATE DEFINER=`root`@`localhost` FUNCTION `fc_serie_numero` () RETURNS VARCHAR(40) CHARSET utf8 begin
-	declare Serie varchar(10);
-	declare Numeracion varchar(16);
+CREATE DEFINER=`root`@`localhost` FUNCTION `fc_serie_numero` (`IdTipoDocumento_` INT) RETURNS VARCHAR(50) CHARSET utf8 begin
+	declare SerieActual varchar(50);
+	declare NumeracionActual varchar(16);
 	declare ResultNumeracion varchar(16);
 	declare AuxNumeracion varchar(16);
 	declare Aumentado int;
-	set Serie = (select Serie from TipoDocumentoTB where IdTipoDocumento = IdTipoDocumento);
-	set Numeracion = (select MAX(Numeracion) from ComprobanteTB where Serie = Serie);
-	if (LEN(Numeracion)>0)then
-		
-			set AuxNumeracion = (select MAX(Numeracion) from ComprobanteTB  where Serie = Serie);
-			set Aumentado = CAST(AuxNumeracion as INT) +1;
-			set ResultNumeracion = '' +replicate ('0',(8 - LEN(Aumentado))) + CAST(Aumentado as VARCHAR (40));
-		
-		
+	set SerieActual = (select Serie from TipoDocumentoTB where IdTipoDocumento = IdTipoDocumento_);
+	set NumeracionActual = (select MAX(Numeracion) from ComprobanteTB where Serie = SerieActual);
+	if CHAR_LENGTH(NumeracionActual) > 0 then
+		set AuxNumeracion = (select MAX(Numeracion) from ComprobanteTB  where Serie = SerieActual);
+		set Aumentado = CAST(AuxNumeracion as INT) +1;
+		set ResultNumeracion = CONCAT_WS('',REPEAT('0',(8 - CHAR_LENGTH(Aumentado))) , cast(Aumentado as varchar(50)));
 	else
-		
-			set ResultNumeracion = '00000001';
-			
-		end if;
-		
-		return Serie+'-'+ResultNumeracion;
+		set ResultNumeracion = '00000001';
+	end if;
+	return CONCAT_WS("-",SerieActual,ResultNumeracion);
 END$$
 
 CREATE DEFINER=`root`@`localhost` FUNCTION `fc_suministro_codigo_alfanumerico` () RETURNS VARCHAR(12) CHARSET utf8 begin
@@ -1690,15 +1684,10 @@ CREATE TABLE `clientetb` (
   `email` varchar(100) DEFAULT NULL,
   `direccion` varchar(200) DEFAULT NULL,
   `representante` varchar(200) DEFAULT NULL,
-  `estado` int(11) NOT NULL
+  `estado` int(11) NOT NULL,
+  `predeterminado` bit(1) DEFAULT NULL,
+  `sistema` bit(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Volcado de datos para la tabla `clientetb`
---
-
-INSERT INTO `clientetb` (`idcliente`, `tipodocumento`, `numerodocumento`, `informacion`, `telefono`, `celular`, `email`, `direccion`, `representante`, `estado`) VALUES
-('CL0001', 1, '* TRIAL ', '* TRIAL * TRIAL', '', '', '', '', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -3793,6 +3782,13 @@ CREATE TABLE `empleadotb` (
   `clave` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Volcado de datos para la tabla `empleadotb`
+--
+
+INSERT INTO `empleadotb` (`idempleado`, `tipodocumento`, `numerodocumento`, `apellidos`, `nombres`, `sexo`, `fechanacimiento`, `puesto`, `rol`, `estado`, `telefono`, `celular`, `email`, `direccion`, `pais`, `ciudad`, `provincia`, `distrito`, `usuario`, `clave`) VALUES
+('EM0001', 0, '', 'ADMINISTRADOR', 'GENERAL', 0, '2020-06-18', 1, 1, 1, '', '', '', '', '', 0, 0, 0, 'admin', 'admin');
+
 -- --------------------------------------------------------
 
 --
@@ -3817,6 +3813,13 @@ CREATE TABLE `empresatb` (
   `provincia` int(11) DEFAULT NULL,
   `distrito` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Volcado de datos para la tabla `empresatb`
+--
+
+INSERT INTO `empresatb` (`idempresa`, `girocomercial`, `nombre`, `telefono`, `celular`, `paginaweb`, `email`, `domicilio`, `tipodocumento`, `numerodocumento`, `razonsocial`, `nombrecomercial`, `pais`, `ciudad`, `provincia`, `distrito`) VALUES
+(1, 1, 'juan ramos del solar', '', '966750883', '', '', 'av. las flores del mal lima peru', 3, '8955566222', 'peru sac', '', '', 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -3881,7 +3884,7 @@ CREATE TABLE `impuestotb` (
 --
 
 INSERT INTO `impuestotb` (`idimpuesto`, `operacion`, `nombre`, `valor`, `predeterminado`, `codigoalterno`, `sistema`) VALUES
-(1, 2, 'NINGUNO(%)', '0.00', b'0', '0', b'0');
+(1, 2, 'NINGUNO(%)', '0.00', b'1', '0', b'1');
 
 -- --------------------------------------------------------
 
@@ -3975,9 +3978,9 @@ INSERT INTO `menutb` (`idmenu`, `nombre`) VALUES
 (4, 'INVENTARIO'),
 (5, 'PRODUCCION'),
 (6, 'CONTACTOS'),
-(7, '* TRIAL '),
+(7, 'REPORTES'),
 (8, 'GRÁFICOS'),
-(9, '* TRIAL * TRI');
+(9, 'CONFIGURACIÓN');
 
 -- --------------------------------------------------------
 
@@ -3994,6 +3997,13 @@ CREATE TABLE `monedatb` (
   `predeterminado` bit(1) NOT NULL,
   `sistema` bit(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Volcado de datos para la tabla `monedatb`
+--
+
+INSERT INTO `monedatb` (`idmoneda`, `nombre`, `abreviado`, `simbolo`, `tipocambio`, `predeterminado`, `sistema`) VALUES
+(1, 'soles', '', 's/.', '1.0000', b'1', b'1');
 
 -- --------------------------------------------------------
 
@@ -4647,86 +4657,86 @@ CREATE TABLE `privilegiostb` (
 --
 
 INSERT INTO `privilegiostb` (`idprivilegio`, `idsubmenu`, `nombre`) VALUES
-(1, 1, '* TRIAL * TRIAL * TRIA'),
+(1, 1, 'AGREGAR TABS DE VENTAS'),
 (2, 1, 'COBRAR'),
-(3, 1, '* TRIAL * TRIAL'),
+(3, 1, 'BUSCAR ARTICULO'),
 (4, 1, 'LISTA DE PRECIO'),
 (5, 1, 'CANTIDAD'),
 (6, 1, 'CAMBIAR PRECIO'),
 (7, 1, 'DESCUENTO'),
 (8, 1, 'SUMAR PRECIO'),
 (9, 1, 'QUITAR ARTICULO'),
-(10, 1, '* TRIAL * TRIAL * '),
+(10, 1, 'MOVIMIENTO DE CAJA'),
 (11, 1, 'IMPRESORA'),
 (12, 1, 'CANCELAR VENTA'),
-(13, 1, '* TRIAL * TRIA'),
+(13, 1, 'BUSCAR CLIENTE'),
 (14, 1, 'CAMBIAR TIPO DE DOCUMENTO'),
-(15, 1, '* TRIAL * TRIAL * TRIA'),
-(16, 2, '* TRIAL * TRIAL'),
+(15, 1, 'CAMBIAR TIPO DE MONEDA'),
+(16, 2, 'EDITAR ARTICULO'),
 (17, 2, 'RECARGAR'),
 (18, 2, 'ETIQUETA'),
 (19, 2, 'BUSCAR POR CLAVE O CLAVE ALTERNA'),
 (20, 2, 'BUSCAR POR DESCIPCIÓN'),
 (21, 2, 'BUSCAR POR CATEGORÍA'),
 (22, 2, 'BUSCAR POR MARCA'),
-(23, 3, '* TRIAL * TRIAL '),
+(23, 3, 'REGISTRAR COMPRA'),
 (24, 3, 'BUSCAR SUMINISTRO'),
 (25, 3, 'EDITAR SUMINISTRO'),
 (26, 3, 'QUITAR SUMINISTRO'),
-(27, 3, '* TRIAL * TRIAL '),
+(27, 3, 'BUSCAR PROVEEDOR'),
 (28, 3, 'EDITAR FECHA DE COMPRA'),
 (29, 3, 'CAMBIAR TIPO DE COMPROBANTE'),
 (30, 3, 'INGRESAR NUMERACIÓN'),
-(31, 3, '* TRIAL * TRIAL * TRIAL * TRIAL * TRIA'),
+(31, 3, 'BUSCAR PRODUCTO POR LA BARRA PRINCIPAL'),
 (32, 3, 'INGRESAR OBSERVACIÓN'),
 (33, 3, 'INGRESAR NOTAS'),
-(34, 4, '* TRIAL * TRIA'),
-(35, 4, '* TRIAL * TRIAL * TRIAL * TR'),
+(34, 4, 'REALIZAR CORTE'),
+(35, 4, 'TERMINAR TURNO Y CERRAR CAJA'),
 (36, 5, 'BUSCAR ARTÍCULO'),
 (37, 5, 'REMOVER ARTÍCULO'),
-(38, 5, '* TRIAL * TRIAL * T'),
+(38, 5, 'REALIZAR MOVIMIENTO'),
 (39, 5, 'INGRESAR UN PROVEEDOR'),
 (40, 5, 'CAMBIAR TIPO DE MOVIMIENTO'),
-(41, 5, '* TRIAL * TRIAL * TRIAL * TRI'),
+(41, 5, 'CAMBIAR ESTADO DEL MOVIMIENTO'),
 (42, 5, 'INGRESAR UNA OBSERVACIÓN'),
-(43, 1, '* TRIAL * TRIAL * TRIA'),
+(43, 1, 'VENTAS Y DEVOLUACIONES'),
 (44, 1, 'CAMBIAR CANTIDADES DESDE LA TABLA '),
-(45, 1, '* TRIAL * TRIAL * TRIAL * TRIA'),
+(45, 1, 'CAMBIAR PRECIO DESDE LA TABLA '),
 (46, 1, 'CAMBIAR CANTIDADES A LOS PRODUCTOS BASADOS EN UNIDADES '),
 (47, 1, 'CAMBIAR PRECIO A LOS PRODUCTOS BASADOS EN UNIDADES'),
 (48, 1, 'APLICAR DESCUENTO A LOS PRODUCTOS BASADOS EN UNIDADES'),
-(49, 1, '* TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * TRIA'),
+(49, 1, 'MOSTRAR DETALLE'),
 (50, 1, 'CAMBIAR PRECIO DE LOS PRODUCTOS  BASADO EN VALOR MONETARIO'),
-(51, 1, '* TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * T'),
+(51, 1, 'APLICAR DESCUENTO A LOS PRODUCTOS BASADO EN VALOR MONETARIO'),
 (52, 7, 'MOSTRAR DETALLE'),
 (53, 7, 'RECARGAR'),
-(54, 7, '* TRIAL * TRI'),
-(55, 7, '* TRIAL * T'),
-(56, 7, '* TRIAL * TRIAL *'),
+(54, 7, 'FECHA INICIAL'),
+(55, 7, 'TIPO DE DOCUMENTO'),
+(56, 7, 'TIPO DE DOCUMENTO'),
 (57, 7, 'ESTADO DE LA VENTA'),
 (58, 7, 'VENDEDOR'),
 (59, 7, 'BUSQUEDA POR CLIENTE O SERIE/NUMERACIÓN'),
-(60, 12, '* TRIAL * TRIAL '),
+(60, 12, 'AGREGAR PRODUCTO'),
 (61, 12, 'EDITAR PRODUCTO'),
 (62, 12, 'CLONAR PRODUCTO'),
 (63, 12, 'RECARGAR LISTA'),
 (64, 12, 'IMPRIMIR ETIQUETA'),
-(65, 12, '* TRIAL * TRIAL *'),
-(66, 12, '* TRIAL * TRIAL * TRIAL * TRIAL '),
-(67, 12, '* TRIAL * TRIAL * TRIAL'),
-(68, 12, '* TRIAL * TRIAL * TR'),
-(69, 12, '* TRIAL * TRIAL '),
+(65, 12, 'BUSCAR POR CLAVE O CLAVE ALTERNA'),
+(66, 12, 'BUSCAR POR DESCRIPCION '),
+(67, 12, 'BUSCAR POR DESCRIPCION '),
+(68, 12, 'BUSCAR POR CATEGORIA'),
+(69, 12, 'BUSCAR POR MARCA'),
 (70, 12, 'EDITAR EL COSTO DEL ARTICULO'),
-(71, 1, '* TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * TRIAL *'),
+(71, 1, 'CAMBIAR CANTIDADES A LOS PRODUCTOS BASADOS MEDIDA'),
 (72, 1, 'CAMBIAR PRECIO A LOS PRODUCTOS BASADOS EN MEDIDA'),
 (73, 1, 'APLICAR DESCUENTO A LOS PRODUCTOS BASADOS EN MEDIDA'),
 (74, 1, 'MOSTRAR LA COLUMNA OPCION DE LA TABLA'),
 (75, 1, 'MOSTRAR LA COLUMNA CANTIDAD DE LA TABLA'),
-(76, 1, '* TRIAL * TRIAL * TRIAL * TRIAL * TRIAL * '),
+(76, 1, 'MOSTRAR LA COLUMNA DESCRIPCION DE LA TABLA'),
 (77, 1, 'MOSTRAR LA COLUMNA IMPUESTO DE LA TABLA'),
 (78, 1, 'MOSTRAR LA COLUMNA PRECIO DE LA TABLA'),
 (79, 1, 'MOSTRAR LA COLUMNA DESCUENTO DE LA TABLA'),
-(80, 1, '* TRIAL * TRIAL * TRIAL * TRIAL * TRIA');
+(80, 1, 'MOSTRAR LA COLUMNA IMPORTE DE LA TABLA');
 
 -- --------------------------------------------------------
 
@@ -5005,17 +5015,17 @@ CREATE TABLE `submenutb` (
 
 INSERT INTO `submenutb` (`idsubmenu`, `nombre`, `idmenu`) VALUES
 (1, 'VENTAS', 2),
-(2, '* TRIAL *', 2),
+(2, 'ARTÍCULOS', 2),
 (3, 'COMPRAS', 2),
 (4, 'CORTE CAJA', 2),
-(5, '* TRIAL * T', 2),
+(5, 'MOVIMIENTOS', 2),
 (7, 'VENTAS REALIZADAS', 3),
 (8, 'COMPRAS REALIZADAS', 3),
 (10, 'KARDEX ARTÍCULO', 3),
 (11, 'CORTE CAJA', 3),
 (12, 'PRODUCTOS', 4),
 (13, 'KARDEX PRODUCTO', 4),
-(14, '* TRIAL * TRIAL ', 4),
+(14, 'CORTE CAJA', 4),
 (15, 'INVENTARIO INICIAL', 4),
 (16, 'MOVIMIENTOS', 4),
 (17, 'ASIGNACION DE PRODUCTOS', 4),
@@ -5029,10 +5039,10 @@ INSERT INTO `submenutb` (`idsubmenu`, `nombre`, `idmenu`) VALUES
 (25, 'ROLES', 9),
 (26, 'EMPLEADOS', 9),
 (27, 'MONEDA', 9),
-(28, '* TRIAL * T', 9),
+(28, 'COMPROBANTE', 9),
 (29, 'IMPUESTOS', 9),
 (30, 'TICKETS', 9),
-(31, '* TRIAL *', 9);
+(31, 'ETIQUETAS', 9);
 
 -- --------------------------------------------------------
 
@@ -5097,12 +5107,20 @@ INSERT INTO `tickettb` (`idticket`, `nombre`, `tipo`, `predeterminado`, `ruta`) 
 --
 
 CREATE TABLE `tipodocumentotb` (
-  `idtipodocumento` int(11) NOT NULL,
-  `nombre` varchar(100) DEFAULT NULL,
-  `serie` varchar(50) DEFAULT NULL,
-  `predeterminado` bit(1) DEFAULT NULL,
-  `nombreimpresion` varchar(120) DEFAULT NULL
+  `IdTipoDocumento` int(11) NOT NULL,
+  `Nombre` varchar(100) NOT NULL,
+  `Serie` varchar(50) NOT NULL,
+  `Predeterminado` tinyint(1) NOT NULL,
+  `NombreImpresion` varchar(120) NOT NULL,
+  `sistema` bit(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Volcado de datos para la tabla `tipodocumentotb`
+--
+
+INSERT INTO `tipodocumentotb` (`IdTipoDocumento`, `Nombre`, `Serie`, `Predeterminado`, `NombreImpresion`, `sistema`) VALUES
+(1, 'TICKET', 'T001', 1, 'TICKET DE VENTA', b'1');
 
 -- --------------------------------------------------------
 
@@ -5482,8 +5500,7 @@ ALTER TABLE `tickettb`
 -- Indices de la tabla `tipodocumentotb`
 --
 ALTER TABLE `tipodocumentotb`
-  ADD PRIMARY KEY (`idtipodocumento`),
-  ADD KEY `ix_tmp_autoinc` (`idtipodocumento`);
+  ADD PRIMARY KEY (`IdTipoDocumento`);
 
 --
 -- Indices de la tabla `tipoetiquetatb`
@@ -5549,7 +5566,7 @@ ALTER TABLE `directoriotb`
 -- AUTO_INCREMENT de la tabla `empresatb`
 --
 ALTER TABLE `empresatb`
-  MODIFY `idempresa` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `idempresa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `etiquetatb`
@@ -5597,7 +5614,7 @@ ALTER TABLE `menutb`
 -- AUTO_INCREMENT de la tabla `monedatb`
 --
 ALTER TABLE `monedatb`
-  MODIFY `idmoneda` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `idmoneda` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `pagoproveedorestb`
@@ -5645,7 +5662,7 @@ ALTER TABLE `tickettb`
 -- AUTO_INCREMENT de la tabla `tipodocumentotb`
 --
 ALTER TABLE `tipodocumentotb`
-  MODIFY `idtipodocumento` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `IdTipoDocumento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `tipoetiquetatb`

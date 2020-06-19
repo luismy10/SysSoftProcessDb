@@ -366,7 +366,7 @@ as
 	end
 go
 
-select * from DetalleCompraTB
+select * from EmpleadoTB
 go
 
 

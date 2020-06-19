@@ -10,6 +10,7 @@ QUITAR LOS CAMPOS FECHA ACTUALIZO
 QUITAR LOS CAMPOS APELLIDOS, NOMBRES, SEXO, FECHANACIMIENTO
 AGREGAR EL CAMPO REPRESENTANTE
 AGREGAR EL CAMPO INFORMACION
+AGREGAR EL CAMPO PREDETERMINADO
 */
 
 create table ClienteTB(
@@ -25,8 +26,10 @@ create table ClienteTB(
 	Celular varchar(20) null,
 	Email varchar(100) null,
 	Direccion varchar(200) null,
-	Representante varchar(200) null
+	Representante varchar(200) null,
 	Estado int not null,
+	Predeterminado bit,
+	Sistema bit
 	--UsuarioRegistro varchar(50) null,
 	--FechaRegistro datetime null,
 	--UsuarioActualizado varchar(50) null,
@@ -131,7 +134,7 @@ else
 go
 
 
-alter procedure Sp_Crud_Persona_Cliente
+drop procedure Sp_Crud_Persona_Cliente
 	@IdCliente varchar(12),
 	@TipoDocumento int,
 	@NumeroDocumento varchar(20),
