@@ -51,7 +51,8 @@ alter procedure Sp_Listar_Clientes
 @search varchar(55)
 as
 select ci.IdCliente,ci.NumeroDocumento,ci.Informacion,ci.Telefono,
-ci.Celular,ci.Direccion,ci.Representante,dbo.Fc_Obtener_Nombre_Detalle(ci.Estado,'0001') as Estado
+ci.Celular,ci.Direccion,ci.Representante,dbo.Fc_Obtener_Nombre_Detalle(ci.Estado,'0001') as Estado,
+ci.Predeterminado
 from ClienteTB as ci 
 where
 	(@search = '')  
@@ -80,13 +81,13 @@ Sp_Get_Cliente_By_Id '78945612'
 go
 
 alter procedure Sp_Get_Cliente_By_Id
-@NumeroDocumento varchar(20)
+@IdCliente varchar(12)
 as
 	begin
 		select ci.IdCliente,ci.TipoDocumento,ci.NumeroDocumento,ci.Informacion,
 		ci.Telefono,ci.Celular,ci.Email,ci.Direccion,ci.Representante,ci.Estado
 		from ClienteTB as ci
-		where ci.NumeroDocumento = @NumeroDocumento
+		where ci.IdCliente = @IdCliente
 	end
 go
 
@@ -259,6 +260,21 @@ as
 		on pr.IdProveedor = di.IdPersona
 		where (@search = '') or (pr.NumeroDocumento like @search+'%')
 		)
+	end
+go
+
+alter procedure Sp_Obtener_Cliente_Informacion_NumeroDocumento
+@opcion tinyint,
+@search varchar(100)
+as
+	begin
+		select IdCliente,NumeroDocumento,Informacion,Direccion from ClienteTB 
+		where 
+		@search = '' and @opcion = 1
+		or
+		NumeroDocumento = @search and @opcion = 2
+		or 
+		Informacion like @search+'%' and @opcion = 3
 	end
 go
 

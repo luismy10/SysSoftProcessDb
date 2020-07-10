@@ -63,9 +63,11 @@ ALTER procedure [dbo].[Sp_Listar_Compras]
 @FechaFinal varchar(20),
 @EstadoCompra int
 as
-select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			c.FechaCompra,c.HoraCompra,c.Numeracion,
+select c.IdCompra,p.IdProveedor,
+			c.FechaCompra,c.HoraCompra,
+			c.Serie,c.Numeracion,
 			p.NumeroDocumento,p.RazonSocial,
+			c.TipoCompra,
 			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
 			c.EstadoCompra,
 			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
@@ -73,17 +75,14 @@ select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdP
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
 			where (@Search = '' and @Opcion = 0)
+				or (c.Serie like @Search+'%' and @Opcion = 0) 
 				or (c.Numeracion like @Search+'%' and @Opcion = 0) 
 				or (p.NumeroDocumento like @Search+'%' and @Opcion = 0) 
 				or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0)
-
 				or (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal and @Opcion = 1)
-
 				or (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal and c.EstadoCompra = @EstadoCompra and @Opcion = 2) 
-	order by c.FechaCompra desc ,
-	c.HoraCompra desc
+	order by c.FechaCompra desc,c.HoraCompra desc
 go
-
 
 
 create function Fc_Obtener_Simbolo_Moneda

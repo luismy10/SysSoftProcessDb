@@ -16,10 +16,10 @@ create table CajaTB(
 	Contado decimal(18,4) null,
 	Calculado decimal(18,4) null,
 	Diferencia decimal(18,4) null,
-	IdUsuario varchar(12) not null,
+	IdUsuario varchar(12) not null
 	--FechaRegistro date not null,
 	--HoraRegistro time not null
-	IdBanco varchar(12)
+	--IdBanco varchar(12)
 
 )
 go
@@ -94,24 +94,42 @@ go
 
 select * from CajaTB
 go
+select * from MovimientoCajaTB where IdCaja = 'CJ0001'
+go
+
+alter procedure Sp_Listar_Movimiento_Caja_By_IdCaja
+@IdCaja varchar(12)
+as
+select format(FechaMovimiento,'dd/MM/yyyyy') as 'FechaMovimiento',
+	convert(varchar,cast(HoraMovimiento as time),22) as 'HoraMovimiento',
+	Comentario,TipoMovimiento,Monto
+	from MovimientoCajaTB where IdCaja = @IdCaja
+go
 
 
-/*
-drop table MovimientoCajaTB(
+--venta
+--1 apertura de caja
+--2 venta efectivo
+--3 venta tarjeta
+--4 ingreso de dinero
+--5 salida de dinero
+--
+
+CREATE table MovimientoCajaTB(
 	IdMovimientoCaja int identity(1,1) not null,
 	IdCaja varchar(12) not null,
-	IdUsuario varchar(12) not null,
 	FechaMovimiento date not null,
 	HoraMovimiento time not null,
 	Comentario varchar(120) null,
-	Movimiento varchar(6) not null,	
-	Entrada decimal(18,4) null,
-	Salidas decimal(18,4) null,
-	Saldo decimal(18,4) null
+	TipoMovimiento tinyint null,
+	Monto decimal(18,4) null,
 	primary key(IdMovimientoCaja,IdCaja)
 )
 go
-*/
+
+
+select * from VentaTB
+go
 
 
 /*
@@ -197,3 +215,6 @@ create function [dbo].[Fc_Lista_Caja_Codigo_Alfanumerico] ()  returns varchar(12
 		end
 go
 */
+
+truncate table CajaTB
+truncate table [dbo].[MovimientoCajaTB]

@@ -1,10 +1,21 @@
 use [PuntoVentaSysSoftDBDesarrollo]
 go
 
-select * from VentaTB
+select * from DetalleVentaTB where IdVenta = 'VT0339'
 go 
 
+delete from VentaTB where IdVenta = 'CL0001'
+go
 
+delete from DetalleVentaTB where IdVenta = 'VT0339'
+go
+
+select * from VentaTB
+go
+select * from ClienteTB
+go
+vt1000000000
+vt9999999999
 
 /*
 se agrega la columna moneda int
@@ -19,6 +30,7 @@ agregar tipo de venta
 	FECHA VENTA - DATE
 	HORA VENTA - TIME
 	TOTAL,DESCUENTO,SUBTOTAL A 6 DECIMALES
+	Tarjeta
 */
 
 /*
@@ -43,14 +55,17 @@ create table VentaTB(
 	Estado int null,
 	Observaciones varchar(200) null,
 	Efectivo decimal(18,4) not null,
+	Tarjeta decimal(18,4),
 	Vuelto decimal(18,4) not null,	
 	primary key(IdVenta)
 )
 go
 
-select * from VentaTB
+select * from VentaTB where FechaVenta = cast(GETDATE() as date)
 go
 
+select * from FormaPagoTB
+go
 
 [dbo].[Sp_Listar_Ventas_Detalle_By_Id] 'VT0007'
 
@@ -236,6 +251,7 @@ select * from DetalleVentaTB
 go
 select * from ComprobanteTB
 go
+
 select * from CuentasClienteTB
 go
 select * from CuentasHistorialClienteTB
@@ -329,32 +345,40 @@ as
 	order by v.FechaVenta desc,v.HoraVenta desc
 go
 
-Sp_Reporte_General_Ventas '2019-11-21','2019-11-21',0
 
-select * from VentaTB
-go
 
-ALTER procedure Sp_Obtener_Venta_ById
+ALTER procedure [dbo].[Sp_Obtener_Venta_ById]
 @idVenta varchar(12)
 as
 	begin
 		select  v.FechaVenta,v.HoraVenta,dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,c.NumeroDocumento,c.Informacion,c.Direccion,
-		t.Nombre as Comprobante,t.NombreImpresion,
+		t.Nombre as Comprobante,
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Total,v.Codigo
+		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Tarjeta,v.Total,v.Codigo
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
         where v.IdVenta = @idVenta
 	end
+
 go
 
-select * from MonedaTB
+create table VentaCreditoTB(
+IdVenta varchar(12) not null,
+IdVentaCredito int identity not null,
+Monto decimal(18,4) not null,
+FechaRegistro date not null,
+HoraRegistro time not null,
+FechaPago date not null,
+HoraPago time not null,
+Estado bit not null
+)
 go
 
-create table CuentasClienteTB(
+/*
+DROP table CuentasClienteTB(
 	IdCuentaClientes int identity(1,1) not null,
 	IdVenta varchar(12) not null,
 	IdCliente varchar(12) not null,
@@ -364,13 +388,9 @@ create table CuentasClienteTB(
 	primary key(IdCuentaClientes)
 )
 go
-
-select * from CuentasClienteTB
-go
-select * from CuentasHistorialClienteTB
-go
-
-alter procedure Sp_Get_CuentasCliente_By_Id
+*/
+/*
+DROP procedure Sp_Get_CuentasCliente_By_Id
 @IdVenta VARCHAR(12)
 as
 SELECT c.IdCuentaClientes,c.IdCliente,p.Nombre,c.FechaVencimiento,MontoInicial 
@@ -378,8 +398,9 @@ FROM CuentasClienteTB as c inner join PlazosTB as p
 on c.Plazos = p.IdPlazos
 WHERE c.IdVenta = @IdVenta
 go
-
-create table CuentasHistorialClienteTB(
+*/
+/*
+DROP table CuentasHistorialClienteTB(
 	IdCuentasHistorialCliente int identity(1,1) not null,
 	IdCuentaClientes int not null,
 	Abono decimal(18,4) not null,
@@ -388,28 +409,27 @@ create table CuentasHistorialClienteTB(
 	primary key(IdCuentasHistorialCliente,IdCuentaClientes)
 )
 go
-
-alter procedure Sp_Listar_CuentasHistorial_By_IdCuenta
+*/
+/*
+drop procedure Sp_Listar_CuentasHistorial_By_IdCuenta
 @IdCuentaClientes int
 as
 	select IdCuentasHistorialCliente,FechaAbono,Abono,Referencia from CuentasHistorialClienteTB where IdCuentaClientes = @IdCuentaClientes
 go
-
-use PuntoVentaSysSoftDBDesarrollo
-go
+*/
 
 /*
 	crear tabla forma de pago para guardar las formas de pago :v
 	26 febrero 2020
 */
-create table FormaPagoTB(
-	IdFormaPago int not null identity,
-	IdVenta varchar(12) not null,
-	Nombre varchar(12) null,
-	Monto decimal(18,8) not null,
-	primary key (IdFormaPago,IdVenta )
-)
-go
+--create table FormaPagoTB(
+--	IdFormaPago int not null identity,
+--	IdVenta varchar(12) not null,
+--	Nombre varchar(12) null,
+--	Monto decimal(18,8) not null,
+--	primary key (IdFormaPago,IdVenta )
+--)
+--go
 
-select * from FormaPagoTB
-go
+--select * from FormaPagoTB
+--go
