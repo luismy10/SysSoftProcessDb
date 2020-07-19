@@ -2,6 +2,8 @@ use [PuntoVentaSysSoftDBDesarrollo]
 go
 
 ----------------------------------------------table de pais-----------------------------------------------------------
+
+
 CREATE TABLE PaisTB (
   PaisCodigo char(3) NOT NULL DEFAULT '',
   PaisNombre varchar(52) NOT NULL DEFAULT '',
@@ -84,7 +86,6 @@ as
 go
 
 ----------------------------------------------empresa-----------------------------------------------------------
-
 create table EmpresaTB(
 	IdEmpresa int identity primary key,
 	GiroComercial int not null,

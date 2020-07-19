@@ -18,5 +18,21 @@ go
 truncate table TipoDocumentoTB
 
 select * from TipoDocumentoTB
+go
+
+alter function Fc_Obtener_Nombre_Tipo_Documento
+	(
+	 @IdTipoDocumento int
+	)
+	RETURNS VARCHAR(100)
+	AS
+	BEGIN
+		DECLARE @Result VARCHAR(100)
+			BEGIN
+				SET @Result = (SELECT Nombre FROM TipoDocumentoTB WHERE IdTipoDocumento = @IdTipoDocumento)	
+			END
+			RETURN @Result
+	END
+go
 
 --call me

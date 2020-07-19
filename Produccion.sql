@@ -333,6 +333,8 @@ go
 truncate table PreciosTB
 go
 --
+update SuministroTB set Cantidad = 0
+go
 truncate table KardexSuministroTB
 go
 truncate table MovimientoInventarioTB

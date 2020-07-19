@@ -31,7 +31,7 @@ go
 SELECT * FROM EmpleadoTB
 GO
 
-alter procedure Sp_Listar_Empleados
+alter procedure Sp_Listar_Empleados ''
 @search varchar(55)
 as
 select ROW_NUMBER() over( order by IdEmpleado desc) as Filas,IdEmpleado,
@@ -99,6 +99,15 @@ as
 		set @datos=	(select Apellidos+' '+Nombres from EmpleadoTB where IdEmpleado = @IdEmpleado)
 		return @datos
 	end
+go
+
+
+create procedure Sp_Validar_Ingreso
+@usuario varchar(100),
+@clave varchar(100)
+as
+SELECT IdEmpleado,Apellidos,Nombres,dbo.Fc_Obtener_Nombre_Rol(Rol) as RolName,Estado,Rol FROM EmpleadoTB
+                WHERE Usuario = @usuario and Clave = @clave and Estado = 1
 go
 
 --administrador

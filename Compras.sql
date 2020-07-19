@@ -9,7 +9,7 @@ go
  Modificado SubTotal, Descuento y Total a 4 decimales 16/02/19
  Agregado campos(s) Observaciones y Notas 16/02/19
  Agrego campos TipoCompra y EstadoCompra 28/02/2019
-
+ Agregar el campo serie comprobante as varchar 
 */
 create table CompraTB
 (
@@ -17,6 +17,7 @@ create table CompraTB
 	Proveedor varchar(12) not null,
 	--Representante varchar(12) null,
 	Comprobante int null,
+	Serie varchar(10) null,
 	Numeracion varchar(20) null,
 	TipoMoneda int not null,
 	FechaCompra date not null,
@@ -64,7 +65,8 @@ ALTER procedure [dbo].[Sp_Listar_Compras]
 @EstadoCompra int
 as
 select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-			c.FechaCompra,c.HoraCompra,c.Numeracion,
+			c.FechaCompra,c.HoraCompra,
+			c.Serie,c.Numeracion,
 			p.NumeroDocumento,p.RazonSocial,
 			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
 			c.EstadoCompra,
@@ -73,6 +75,7 @@ select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdP
 			from CompraTB as c inner join ProveedorTB as p
 			on c.Proveedor = p.IdProveedor
 			where (@Search = '' and @Opcion = 0)
+				or (c.Serie like @Search+'%' and @Opcion = 0) 
 				or (c.Numeracion like @Search+'%' and @Opcion = 0) 
 				or (p.NumeroDocumento like @Search+'%' and @Opcion = 0) 
 				or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0)
@@ -83,7 +86,6 @@ select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdP
 	order by c.FechaCompra desc ,
 	c.HoraCompra desc
 go
-
 
 
 create function Fc_Obtener_Simbolo_Moneda
@@ -226,11 +228,22 @@ go
 select * from PlazosTB
 go
 
-
-select sum(Total) as 'totalcontado' from CompraTB where TipoCompra = 1 and FechaCompra = '10-06-2020'
+select sum(Total) as 'totalcontado' from CompraTB where TipoCompra = 1 and FechaCompra between '11-06-2020' and '11-06-2020'
 go
 
-select sum(Total) as 'totalcredito' from CompraTB where TipoCompra = 2 and FechaCompra = '10-06-2020'
+select sum(Total) as 'totalcredito' from CompraTB where TipoCompra = 2 and FechaCompra between '11-06-2020' and '11-06-2020'
+go
+
+select 
+	case 
+		when a.ValorInventario = 1 then (dv.Cantidad * a.PrecioVentaGeneral )- (dv.Cantidad * dv.CostoVenta)
+		when a.ValorInventario = 2 then (dv.CantidadGranel * a.PrecioVentaGeneral )- (dv.CantidadGranel * dv.CostoVenta)
+		when a.ValorInventario = 3 then (dv.Cantidad * a.PrecioVentaGeneral )- (dv.Cantidad * dv.CostoVenta)
+	end as  Utilidad
+		from DetalleVentaTB as dv 
+		inner join SuministroTB as a on dv.IdArticulo = a.IdSuministro 
+		inner join VentaTB as v on v.IdVenta = dv.IdVenta
+		where v.Estado <> 3 and v.FechaVenta between '11-06-2020' and '11-06-2020' 
 go
 
 select dbo.Fc_Obtener_Nombre_Detalle(p.TipoDocumento,'0003') as NombreDocumento,p.NumeroDocumento,p.RazonSocial,p.Direccion,p.Telefono,p.Celular,p.Email from CompraTB as c inner join ProveedorTB as p on c.Proveedor = p.IdProveedor where c.IdCompra = 'CP0002'
@@ -272,43 +285,37 @@ as
 go
 
 
-alter procedure [dbo].[Sp_Reporte_General_Compras] 
+alter procedure Sp_Reporte_General_Compras
 @FechaInicial varchar(20),
 @FechaFinal varchar(20),
-@TipoDocumento int,
 @Proveedor varchar(12),
 @TipoCompra int
 as
-	select td.Nombre,c.FechaCompra,p.RazonSocial as Proveedor,c.Numeracion,
+	select c.FechaCompra,p.RazonSocial as Proveedor,c.Serie,c.Numeracion,
 	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,c.EstadoCompra,
 	dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') EstadoName,
 	dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,c.Total 
-	from CompraTB as c inner join TipoDocumentoTB as td on c.Comprobante = td.IdTipoDocumento
-	inner join ProveedorTB as p on c.Proveedor = p.IdProveedor
+	from CompraTB as c inner join ProveedorTB as p on c.Proveedor = p.IdProveedor
+
 
 	where
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND @Proveedor ='' AND @TipoCompra = 0)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @Proveedor ='' AND @TipoCompra = 0)
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND @Proveedor ='' AND @TipoCompra = 0)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND p.IdProveedor = @Proveedor AND @TipoCompra = 0)
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND p.IdProveedor = @Proveedor AND @TipoCompra = 0)
-	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND @Proveedor ='' AND c.TipoCompra = @TipoCompra)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @Proveedor ='' AND c.TipoCompra = @TipoCompra)
 	-----------------------------------------------------------------------------------------------------------------------------------------
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND p.IdProveedor = @Proveedor AND @TipoCompra = 0)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND p.IdProveedor = @Proveedor AND @TipoCompra = 0)
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND @Proveedor = 0 AND c.TipoCompra = @TipoCompra)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @Proveedor = 0 AND c.TipoCompra = @TipoCompra)
 	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND @TipoDocumento = 0 AND p.IdProveedor = @Proveedor AND c.TipoCompra = @TipoCompra)
-	or
-	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND td.IdTipoDocumento = @TipoDocumento AND p.IdProveedor = @Proveedor AND c.TipoCompra = @TipoCompra)
+	(FechaCompra BETWEEN @FechaInicial AND @FechaFinal AND p.IdProveedor = @Proveedor AND c.TipoCompra = @TipoCompra)
 	-----------------------------------------------------------------------------------------------------------------------------------------
 	
 	order by c.FechaCompra desc,c.HoraCompra desc
+
 go
-
-
 
 select FORMAT(CAST(FechaCompra as date),'MMMM/dd/yyyy') as Fecha,dbo.Fc_Obtener_Nombre_Detalle(Comprobante,'0009') as Comprobante,Numeracion,Total from CompraTB
 where IdCompra = 'CP0001'
@@ -369,17 +376,19 @@ CREATE TABLE LoteTB (
 )
 go
 
-ALTER procedure [dbo].[Sp_Obtener_Compra_ById]
+SELECT * FROM CompraTB
+GO
+
+ALTER procedure Sp_Obtener_Compra_ById
 @IdCompra varchar(12)
 as
-	select c.FechaCompra, c.HoraCompra,c.Comprobante, c.Numeracion,
+	select c.FechaCompra, c.HoraCompra,c.Comprobante, c.Serie,c.Numeracion,
 	m.Nombre,m.Simbolo,
 	dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') as Tipo,
 	c.EstadoCompra,
 	dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') as Estado,
-	c.Total,c.Observaciones,c.Notas,td.Nombre 
+	c.Total,c.Observaciones,c.Notas
 	from CompraTB as c inner join MonedaTB as m on c.TipoMoneda = m.IdMoneda
-	inner join TipoDocumentoTB as td on c.Comprobante=td.IdTipoDocumento 
 	where c.IdCompra = @IdCompra
 go
 
