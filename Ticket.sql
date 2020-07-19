@@ -65,3 +65,6 @@ alter function Fc_Ticket_Codigo_Numerico ()  returns int
 			return @CodGenerado
 		end
 go
+
+print [dbo].[Fc_Ticket_Codigo_Numerico]() 
+go

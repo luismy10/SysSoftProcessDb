@@ -14,8 +14,7 @@ select * from VentaTB
 go
 select * from ClienteTB
 go
-vt1000000000
-vt9999999999
+
 
 /*
 se agrega la columna moneda int
@@ -61,7 +60,10 @@ create table VentaTB(
 )
 go
 
-select * from VentaTB where FechaVenta = cast(GETDATE() as date)
+select COUNT(*) as VentasCobrar from VentaTB where Tipo = 2 and Estado = 2
+go
+
+select COUNT(*) as ComprasPagar from CompraTB where TipoCompra = 2 and EstadoCompra = 2
 go
 
 select * from FormaPagoTB
@@ -351,7 +353,8 @@ ALTER procedure [dbo].[Sp_Obtener_Venta_ById]
 @idVenta varchar(12)
 as
 	begin
-		select  v.FechaVenta,v.HoraVenta,dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,c.NumeroDocumento,c.Informacion,c.Direccion,
+		select  v.FechaVenta,v.HoraVenta,dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,
+		c.NumeroDocumento,c.Informacion,c.Direccion,
 		t.Nombre as Comprobante,
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,

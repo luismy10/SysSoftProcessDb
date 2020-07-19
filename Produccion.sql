@@ -354,23 +354,35 @@ create table KardexSuministroTB
 )
 go
 
+alter table KardexSuministroTB
+add Costo decimal(18,8),Total decimal(18,8)
+go
+
+update KardexSuministroTB set KardexSuministroTB.Costo = SuministroTB.PrecioCompra,  
+KardexSuministroTB.Total =  SuministroTB.PrecioCompra * KardexSuministroTB.Cantidad
+from KardexSuministroTB inner join SuministroTB 
+on KardexSuministroTB.IdSuministro = SuministroTB.IdSuministro
+go
+
 select * from KardexSuministroTB
 go
 
-alter procedure Sp_Listar_Kardex_Suministro_By_Id
-@idArticulo varchar(45)
+ALTER procedure [dbo].[Sp_Listar_Kardex_Suministro_By_Id] 
+@idArticulo varchar(45),
+@fechaInicio varchar(15),
+@fechaFinal varchar(15)
 as
 SELECT k.IdSuministro,k.Fecha,k.Hora,k.Tipo,t.Nombre,
-k.Detalle,k.Cantidad
+k.Detalle,k.Cantidad,k.Costo,k.Total
 FROM KardexSuministroTB AS k INNER JOIN SuministroTB AS a ON k.IdSuministro = a.IdSuministro
 inner join TipoMovimientoTB AS t ON k.Movimiento = t.IdTipoMovimiento
 WHERE 
-	(a.IdSuministro = @idArticulo )
+	(a.IdSuministro = @idArticulo and @fechaInicio = '' and @fechaFinal = '')
 	or
-	(a.Clave = @idArticulo or a.ClaveAlterna = @idArticulo)
+	(a.IdSuministro = @idArticulo and k.Fecha between @fechaInicio and @fechaFinal)
 
-	order by k.Fecha,k.Hora asc
-GO
+	order by k.Fecha asc , k.Hora asc
+go
 
 /*
 	movimiento
