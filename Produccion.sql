@@ -34,16 +34,11 @@ update SuministroTB set ValorInventario = 1 where ValorInventario = 1
 
 
 
-update 
-
 create table SuministroTB(
 	IdSuministro varchar(12) primary key not null,
 	Origen int not null,
 	Clave varchar(45) not null,
-	ClaveAlterna varchar(45) null,3
-	0 
-
-
+	ClaveAlterna varchar(45) null,
 	NombreMarca varchar(120) not null,
 	NombreGenerico varchar(120) null,
 	Categoria int null,
@@ -67,8 +62,8 @@ create table SuministroTB(
 )
 
 
-
-create procedure Sp_Listar_Suministro_Paginacion_View
+/*
+drop procedure Sp_Listar_Suministro_Paginacion_View
 @paginacion int
 as
 	begin	
@@ -81,15 +76,20 @@ as
 			offset @paginacion rows fetch next 20 rows only
 	end
 go
+*/
 
-alter procedure Sp_Listar_Suministros_Lista_View 
+/*
+drop procedure Sp_Listar_Suministros_Lista_View 
 @opcion smallint,
 @search varchar(100)
 as
 	begin
-		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+		select IdSuministro,Clave,
+		NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,
+		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
 		Cantidad,PrecioCompra,
-		PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
+		PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,
+		dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
 		UnidadVenta,Inventario,Impuesto,Lote,ValorInventario,Imagen
 		from SuministroTB 
 		where (@opcion = 1 and @search = '' and Estado = 1) 
@@ -110,6 +110,7 @@ as
 		(@opcion = 5 and dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') like @search +'%' and Estado = 1)
 	end
 go
+*/
 
 alter procedure Sp_Listar_Suministro_By_Search
 @search varchar(60)
@@ -144,10 +145,6 @@ as
 	end
 go
 
-SELECT * FROM SuministroTB
-GO
-
-
 
 create procedure Sp_Listar_Detalle_Compra_By_IdCompra
 @IdCompra varchar(12)
@@ -164,7 +161,8 @@ go
 select * from SuministroTB
 go
 
-ALTER procedure [dbo].[Sp_Listar_Suministro_Paginacion]
+/*
+drop procedure [dbo].[Sp_Listar_Suministro_Paginacion]
 @paginacion int
 as
 	begin	
@@ -178,9 +176,10 @@ as
 	end
 
 go
+*/
 
-
-ALTER procedure Sp_Listar_Suministros
+/*
+drop procedure Sp_Listar_Suministros
 @Opcion tinyint,
 @Clave varchar(45),
 @NombreMarca varchar(120),
@@ -207,9 +206,7 @@ as
 		or (Marca=@Marca and @Opcion = 6)
 	end
 go
-
-select * from SuministroTB
-go
+*/
 
 
 alter procedure Sp_Get_Suministro_For_Asignacion_By_Id
@@ -223,9 +220,18 @@ as
 	end
 go
 
-alter procedure Sp_Listar_Inventario_Suministros
+Sp_Listar_Inventario_Suministros '',0,'',0,0,0,0,5
+GO
+
+ALTER procedure Sp_Listar_Inventario_Suministros
 @Producto varchar(45),
-@Existencia tinyint
+@Existencia tinyint,
+@NombreMarca varchar(120),
+@opcion tinyint,
+@Categoria int,
+@Marca int,
+@PosicionPagina smallint,
+@FilasPorPagina smallint
 as
 	begin
 		select
@@ -234,19 +240,62 @@ as
 		dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
 		dbo.Fc_Obtener_Nombre_Detalle(Estado,'0001') as Estado,
 		(PrecioCompra*Cantidad) as Total,
-		StockMinimo,StockMaximo 
+		StockMinimo,StockMaximo,
+		dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,
+		dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca
 		from SuministroTB 
-		where (@Producto = '' and @Existencia = 0 and Inventario = 1)
-		or (Clave <> '' and Clave = @Producto and @Existencia = 0 and Inventario = 1 )
-		or (ClaveAlterna <> '' and ClaveAlterna = @Producto and @Existencia = 0 and Inventario = 1)
-		or (@Producto = '' and @Existencia = 1 and Cantidad <= 0)
-		or (@Producto = '' and @Existencia = 2 and Cantidad > 0)
-		or (@Producto = '' and @Existencia = 3 and Cantidad > 0 and Cantidad <= StockMinimo)
-		order by Cantidad asc
+		where
+		(@Producto = '' and @NombreMarca = '' and @Existencia = 0 and Inventario = 1 and @opcion = 0)
+		-------------------------------------------------------------------------------------------------------------
+		or (Clave <> '' and Clave = @Producto and Inventario = 1 and @opcion = 1)
+		or (ClaveAlterna <> '' and ClaveAlterna = @Producto and Inventario = 1 and @opcion = 1)
+		-------------------------------------------------------------------------------------------------------------
+		or (NombreMarca like @NombreMarca+'%' and Inventario = 1 and @opcion = 2)
+		-------------------------------------------------------------------------------------------------------------
+		or ( @Existencia = 1 and Cantidad <= 0 and @opcion = 3)
+		or ( @Existencia = 2 and Cantidad > 0 and Cantidad < StockMinimo and @opcion = 3)
+		or ( @Existencia = 3 and Cantidad >= StockMinimo  and Cantidad < StockMaximo and @opcion = 3)
+		or ( @Existencia = 4 and Cantidad >= StockMaximo and @opcion = 3)
+		------------------------------------------------------------------------------------------------------------- 
+		or ( Categoria = @Categoria and Inventario = 1 and @opcion = 4)
+		-------------------------------------------------------------------------------------------------------------
+		or ( Marca = @Marca and Inventario = 1 and @opcion = 5)
+		
+		order by IdSuministro asc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
 	end
 go
 
+alter procedure Sp_Listar_Inventario_Suministros_Count
+@Producto varchar(45),
+@Existencia tinyint,
+@NombreMarca varchar(120),
+@opcion tinyint,
+@Categoria int,
+@Marca int
+as
+	begin
+		select count(*) as Total from SuministroTB where  
+		(@Producto = '' and @NombreMarca = '' and @Existencia = 0 and Inventario = 1 and @opcion = 0)
+		-------------------------------------------------------------------------------------------------------------
+		or (Clave <> '' and Clave = @Producto and Inventario = 1 and @opcion = 1)
+		or (ClaveAlterna <> '' and ClaveAlterna = @Producto and Inventario = 1 and @opcion = 1)
+		-------------------------------------------------------------------------------------------------------------
+		or (NombreMarca like @NombreMarca+'%' and Inventario = 1 and @opcion = 2)
+		-------------------------------------------------------------------------------------------------------------
+		or ( @Existencia = 1 and Cantidad <= 0 and @opcion = 3)
+		or ( @Existencia = 2 and Cantidad > 0 and Cantidad < StockMinimo and @opcion = 3)
+		or ( @Existencia = 3 and Cantidad >= StockMinimo  and Cantidad < StockMaximo and @opcion = 3)
+		or ( @Existencia = 4 and Cantidad >= StockMaximo and @opcion = 3)
+		------------------------------------------------------------------------------------------------------------- 
+		or ( Categoria = @Categoria and Inventario = 1 and @opcion = 4)
+		-------------------------------------------------------------------------------------------------------------
+		or ( Marca = @Marca and Inventario = 1 and @opcion = 5)
+	end
 go
+
+select * from SuministroTB
+go
+
 create function [dbo].[Fc_Suministro_Codigo_Alfanumerico] ()  returns varchar(12)
 	as
 		begin
@@ -302,23 +351,35 @@ create table KardexSuministroTB
 )
 go
 
+alter table KardexSuministroTB
+add Costo decimal(18,8),Total decimal(18,8)
+go
+
+update KardexSuministroTB set KardexSuministroTB.Costo = SuministroTB.PrecioCompra,  
+KardexSuministroTB.Total =  SuministroTB.PrecioCompra * KardexSuministroTB.Cantidad
+from KardexSuministroTB inner join SuministroTB 
+on KardexSuministroTB.IdSuministro = SuministroTB.IdSuministro
+go
+
 select * from KardexSuministroTB
 go
 
-alter procedure Sp_Listar_Kardex_Suministro_By_Id
-@idArticulo varchar(45)
+ALTER procedure [dbo].[Sp_Listar_Kardex_Suministro_By_Id] 
+@idArticulo varchar(45),
+@fechaInicio varchar(15),
+@fechaFinal varchar(15)
 as
 SELECT k.IdSuministro,k.Fecha,k.Hora,k.Tipo,t.Nombre,
-k.Detalle,k.Cantidad
+k.Detalle,k.Cantidad,k.Costo,k.Total
 FROM KardexSuministroTB AS k INNER JOIN SuministroTB AS a ON k.IdSuministro = a.IdSuministro
 inner join TipoMovimientoTB AS t ON k.Movimiento = t.IdTipoMovimiento
 WHERE 
-	(a.IdSuministro = @idArticulo )
+	(a.IdSuministro = @idArticulo and @fechaInicio = '' and @fechaFinal = '')
 	or
-	(a.Clave = @idArticulo or a.ClaveAlterna = @idArticulo)
+	(a.IdSuministro = @idArticulo and k.Fecha between @fechaInicio and @fechaFinal)
 
-	order by k.Fecha,k.Hora asc
-GO
+	order by k.Fecha asc , k.Hora asc
+go
 
 /*
 	movimiento

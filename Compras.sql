@@ -64,10 +64,15 @@ ALTER procedure [dbo].[Sp_Listar_Compras]
 @FechaFinal varchar(20),
 @EstadoCompra int
 as
+<<<<<<< HEAD
 select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
+=======
+select c.IdCompra,p.IdProveedor,
+>>>>>>> 56bcd7ae8313dd5448bdff866007572a82bf11e1
 			c.FechaCompra,c.HoraCompra,
 			c.Serie,c.Numeracion,
 			p.NumeroDocumento,p.RazonSocial,
+			c.TipoCompra,
 			dbo.Fc_Obtener_Nombre_Detalle(c.TipoCompra,'0015') Tipo,
 			c.EstadoCompra,
 			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
@@ -79,12 +84,9 @@ select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdP
 				or (c.Numeracion like @Search+'%' and @Opcion = 0) 
 				or (p.NumeroDocumento like @Search+'%' and @Opcion = 0) 
 				or (p.RazonSocial like '%'+@Search+'%' and @Opcion = 0)
-
 				or (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal and @Opcion = 1)
-
 				or (CAST(c.FechaCompra as Date) BETWEEN @FechaInicial and @FechaFinal and c.EstadoCompra = @EstadoCompra and @Opcion = 2) 
-	order by c.FechaCompra desc ,
-	c.HoraCompra desc
+	order by c.FechaCompra desc,c.HoraCompra desc
 go
 
 
@@ -350,6 +352,36 @@ from DetalleCompraTB as d inner join SuministroTB as s
 on d.IdArticulo = s.IdSuministro
 where d.IdCompra = @IdCompra
 go
+
+alter procedure Sp_Compra_For_Editar
+@IdCompra varchar(12)
+as
+	begin
+		select IdCompra,Proveedor,
+		dbo.Fc_Obtener_Datos_Proveedor(Proveedor)as DatosProveedor,
+		FechaCompra,Serie,Numeracion,TipoMoneda,Observaciones,Notas 
+		from CompraTB WHERE IdCompra = @IdCompra
+	end
+go
+
+create procedure Sp_Detalle_Compra_For_Editar
+@IdCompra varchar(12)
+as
+	begin
+		select d.IdArticulo,s.Clave,s.NombreMarca,d.Cantidad,d.PrecioCompra,
+		d.Descuento,d.Importe,d.IdImpuesto,d.NombreImpuesto,d.ValorImpuesto,d.Descripcion 
+		from DetalleCompraTB as d inner join SuministroTB as s on d.IdArticulo = s.IdSuministro 
+		where d.IdCompra = @IdCompra
+	end
+go
+
+select * from EmpleadoTB
+go
+
+
+truncate table monedatb;
+truncate table empresatb;
+truncate table empleadotb;
 
 
 -- Borrado TipoLote, FechaFabricacion (15/02/19)

@@ -3,6 +3,7 @@ go
 
 /*
 agregado campo serie 17.02.2020
+agregar campo sistema 18 06 2020
 */
 
 create table TipoDocumentoTB(
@@ -10,7 +11,8 @@ create table TipoDocumentoTB(
 	Nombre varchar(100) not null,
 	Serie varchar (10) not null,
 	Predeterminado bit not null,
-	NombreImpresion varchar(120) not null
+	---NombreImpresion varchar(120) not null,
+	Sistema bit null,
 	primary key(IdTipoDocumento)
 )
 go

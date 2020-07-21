@@ -155,6 +155,26 @@ as
 	end
 go
 
+create procedure Sp_Listar_Total_Banco
+@IdBanco varchar(12)
+as
+	begin
+		SELECT dbo.Fc_Obtener_Simbolo_Moneda(IdMoneda) as Simbolo,SaldoInicial FROM Banco WHERE IdBanco = @IdBanco
+	end
+go
+
+create procedure Sp_Obtener_Proveedor_ByIdCompra
+@IdCompra varchar(12)
+as
+	begin
+		select p.IdProveedor,dbo.Fc_Obtener_Nombre_Detalle(p.TipoDocumento,'0003') as NombreDocumento,p.NumeroDocumento,p.RazonSocial as Proveedor,p.Telefono,p.Celular,p.Direccion,p.Email 
+                        from CompraTB as c inner join ProveedorTB as p
+                        on c.Proveedor = p.IdProveedor
+                        where c.IdCompra = @IdCompra
+	end
+go
+
+
 select * from Banco
 go
 select * from BancoHistorialTB

@@ -2,6 +2,21 @@ use PuntoVentaSysSoftDBDesarrollo
 go
 
 
+truncate table monedatb;
+truncate table empresatb;
+truncate table empleadotb;
+truncate table tipodocumentotb ;
+truncate table comprobantetb;
+truncate table impuestotb ;
+truncate table clientetb ;
+truncate table empleadotb ;
+go
+
+select * from CompraTB
+go
+
+
+--AGREGAR NUEVO CAMPO SISTEMA
 create table EmpleadoTB
 (
 	IdEmpleado varchar(12) not null,
@@ -24,11 +39,12 @@ create table EmpleadoTB
 	Distrito int null,
 	Usuario varchar(100) null,
 	Clave varchar(100) null,
+	Sistema bit,
 	primary key(IdEmpleado) 
 )
 go
 
-SELECT * FROM EmpleadoTB
+SELECT * FROM ClienteTB
 GO
 
 alter procedure Sp_Listar_Empleados ''
