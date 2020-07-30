@@ -398,3 +398,10 @@ go
 
 [dbo].[Sp_Obtener_Cliente_Informacion_NumeroDocumento] 3,''
 GO
+
+/*
+29/07/2020
+*/
+
+select * from SuministroTB
+go
