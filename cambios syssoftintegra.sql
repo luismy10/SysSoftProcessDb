@@ -243,7 +243,7 @@ as
 	end
 go
 
-create procedure [dbo].[Sp_Listar_Suministros_Count]
+ALTER procedure [dbo].[Sp_Listar_Suministros_Count]
 @Opcion tinyint,
 @Clave varchar(45),
 @NombreMarca varchar(120),
@@ -266,7 +266,11 @@ as
 	end
 go
 
+<<<<<<< HEAD
 alter procedure Sp_Listar_Suministros_Lista_View 
+=======
+ALTER procedure Sp_Listar_Suministros_Lista_View 
+>>>>>>> 47bc6e3ccd8847cf7d1d82f38bd75b955322bd1d
 @opcion smallint,
 @search varchar(100),
 @PosicionPagina smallint,
@@ -303,7 +307,7 @@ as
 	end
 go
 
-create procedure Sp_Listar_Suministros_Lista_View_Count
+ALTER procedure Sp_Listar_Suministros_Lista_View_Count
 @opcion smallint,
 @search varchar(100)
 as
@@ -341,7 +345,7 @@ https://www.youtube.com/watch?v=A78iNBzT8ug
 20/07/2020
 */
 
-create procedure Sp_Get_Suministro_For_Movimiento
+ALTER procedure Sp_Get_Suministro_For_Movimiento
 @IdSuministro varchar(12)
 as
 	begin
@@ -414,8 +418,21 @@ go
 GO
 
 /*
-29/07/2020
+30/07/2020
 */
+
+CREATE procedure Sp_Obtener_Proveedor_For_ComboBox
+@search varchar(100)
+as
+	SELECT IdProveedor,NumeroDocumento,RazonSocial FROM ProveedorTB
+	WHERE (@search <> '' and NumeroDocumento LIKE @search+'%') OR (@search<>'' and RazonSocial LIKE @search+'%')
+go
+
+
+/*
+31/07/2020
+*/
+
 
 select sum(Total) as 'ventasContado' from VentaTB where Tipo = 1 and FechaVenta between '2020-07-03' and '2020-07-03'
 go
@@ -455,8 +472,8 @@ WHERE
 	or
 	(a.IdSuministro = @idArticulo and k.Fecha between @fechaInicio and @fechaFinal and @opcion = 1)
 
-	--order by k.Fecha asc , k.Hora asc
-	order  by k.Fecha asc , k.Hora asc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
+	order by k.Fecha asc , k.Hora asc
+	--order  by k.Fecha asc , k.Hora asc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
 go
 
 alter procedure [dbo].[Sp_Listar_Kardex_Suministro_By_Id_Count] 
@@ -473,3 +490,19 @@ WHERE
 	(a.IdSuministro = @idArticulo and k.Fecha between @fechaInicio and @fechaFinal and @opcion = 1)
 go
 
+
+SELECT * FROM SuministroTB
+GO
+
+select * from PreciosTB
+go
+
+/*
+01/08/2020
+*/
+alter procedure Sp_Obtener_Proveedor_For_ComboBox
+@search varchar(100)
+as
+	SELECT IdProveedor,NumeroDocumento,RazonSocial FROM ProveedorTB
+	WHERE (NumeroDocumento LIKE @search+'%') OR (@search<>'' and RazonSocial LIKE @search+'%')
+go
