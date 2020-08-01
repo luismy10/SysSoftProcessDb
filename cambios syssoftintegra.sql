@@ -1,4 +1,4 @@
-USE PuntoVentaSysSoftDBDesarrollo
+USE Actual
 GO
 
 
@@ -173,7 +173,7 @@ go
 18/07/2020
 */
 
-alter procedure Sp_Listar_Compras_Credito
+create procedure Sp_Listar_Compras_Credito
 @Search varchar(100)
 as
 	select
@@ -266,7 +266,7 @@ as
 	end
 go
 
-create procedure Sp_Listar_Suministros_Lista_View 
+alter procedure Sp_Listar_Suministros_Lista_View 
 @opcion smallint,
 @search varchar(100),
 @PosicionPagina smallint,
@@ -358,11 +358,23 @@ go
 22/07/2020
 */
 
+select * from CompraTB
+go
+
+select sum(Total) as 'ventasContado' from VentaTB where Tipo = 1 and FechaCompra between ? and ?
+
+SELECT * FROM SuministroTB where Clave = '720342563393'
+
+ Sp_Listar_Kardex_Suministro_By_Id 0,'SM1089','',''
+ go
+
 ALTER procedure [dbo].[Sp_Listar_Kardex_Suministro_By_Id] 
 @opcion tinyint,
 @idArticulo varchar(45),
 @fechaInicio varchar(15),
-@fechaFinal varchar(15)
+@fechaFinal varchar(15),
+@PosicionPagina smallint,
+@FilasPorPagina smallint
 as
 SELECT k.IdSuministro,k.Fecha,k.Hora,k.Tipo,t.Nombre,
 k.Detalle,k.Cantidad,k.Costo,k.Total
@@ -373,8 +385,10 @@ WHERE
 	or
 	(a.IdSuministro = @idArticulo and k.Fecha between @fechaInicio and @fechaFinal and @opcion = 1)
 
-	order by k.Fecha asc , k.Hora asc
+	--order by k.Fecha asc , k.Hora asc
+	order  by k.Fecha asc , k.Hora asc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
 go
+
 
 
 /*
@@ -403,5 +417,59 @@ GO
 29/07/2020
 */
 
-select * from SuministroTB
+select sum(Total) as 'ventasContado' from VentaTB where Tipo = 1 and FechaVenta between '2020-07-03' and '2020-07-03'
 go
+
+select * from VentaTB
+go
+
+select Total as 'ventasCredito' from VentaTB where FechaVenta = '2020-07-03'
+go
+
+select sum(Total) as 'comprasAnuladas' from CompraTB where EstadoCompra = 2
+go
+
+select * from VentaTB
+go
+
+/*
+30/07/2020
+*/
+
+Sp_Listar_Kardex_Suministro_By_Id 0
+
+ALTER procedure [dbo].[Sp_Listar_Kardex_Suministro_By_Id] 
+@opcion tinyint,
+@idArticulo varchar(45),
+@fechaInicio varchar(15),
+@fechaFinal varchar(15),
+@PosicionPagina smallint,
+@FilasPorPagina smallint
+as
+SELECT k.IdSuministro,k.Fecha,k.Hora,k.Tipo,t.Nombre,
+k.Detalle,k.Cantidad,k.Costo,k.Total
+FROM KardexSuministroTB AS k INNER JOIN SuministroTB AS a ON k.IdSuministro = a.IdSuministro
+inner join TipoMovimientoTB AS t ON k.Movimiento = t.IdTipoMovimiento
+WHERE 
+	(a.IdSuministro = @idArticulo and @fechaInicio = '' and @fechaFinal = '' and @opcion = 0)
+	or
+	(a.IdSuministro = @idArticulo and k.Fecha between @fechaInicio and @fechaFinal and @opcion = 1)
+
+	--order by k.Fecha asc , k.Hora asc
+	order  by k.Fecha asc , k.Hora asc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
+go
+
+alter procedure [dbo].[Sp_Listar_Kardex_Suministro_By_Id_Count] 
+@opcion tinyint,
+@idArticulo varchar(45),
+@fechaInicio varchar(15),
+@fechaFinal varchar(15)
+as
+SELECT count(*) as Total FROM KardexSuministroTB AS k INNER JOIN SuministroTB AS a ON k.IdSuministro = a.IdSuministro
+inner join TipoMovimientoTB AS t ON k.Movimiento = t.IdTipoMovimiento
+WHERE 
+	(a.IdSuministro = @idArticulo and @fechaInicio = '' and @fechaFinal = '' and @opcion = 0)
+	or
+	(a.IdSuministro = @idArticulo and k.Fecha between @fechaInicio and @fechaFinal and @opcion = 1)
+go
+
