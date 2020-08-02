@@ -459,9 +459,9 @@ ALTER procedure [dbo].[Sp_Listar_Kardex_Suministro_By_Id]
 @opcion tinyint,
 @idArticulo varchar(45),
 @fechaInicio varchar(15),
-@fechaFinal varchar(15),
-@PosicionPagina smallint,
-@FilasPorPagina smallint
+@fechaFinal varchar(15)
+--@PosicionPagina smallint,
+--@FilasPorPagina smallint
 as
 SELECT k.IdSuministro,k.Fecha,k.Hora,k.Tipo,t.Nombre,
 k.Detalle,k.Cantidad,k.Costo,k.Total
@@ -491,10 +491,12 @@ WHERE
 go
 
 
-SELECT * FROM SuministroTB
+SELECT * FROM SuministroTB WHERE IdSuministro = 'SM0001'
 GO
 
-select * from PreciosTB
+SELECT * FROM SuministroTB WHERE Clave = '720342563393'
+go
+select * from KardexSuministroTB where IdSuministro = 'SM1089'
 go
 
 /*
