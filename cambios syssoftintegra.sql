@@ -266,11 +266,8 @@ as
 	end
 go
 
-<<<<<<< HEAD
-alter procedure Sp_Listar_Suministros_Lista_View 
-=======
+
 ALTER procedure Sp_Listar_Suministros_Lista_View 
->>>>>>> 47bc6e3ccd8847cf7d1d82f38bd75b955322bd1d
 @opcion smallint,
 @search varchar(100),
 @PosicionPagina smallint,
@@ -499,6 +496,12 @@ go
 select * from KardexSuministroTB where IdSuministro = 'SM1089'
 go
 
+select * from VentaTB
+go
+
+
+select * from CompraTB
+go
 /*
 01/08/2020
 */
@@ -507,4 +510,17 @@ alter procedure Sp_Obtener_Proveedor_For_ComboBox
 as
 	SELECT IdProveedor,NumeroDocumento,RazonSocial FROM ProveedorTB
 	WHERE (NumeroDocumento LIKE @search+'%') OR (@search<>'' and RazonSocial LIKE @search+'%')
+go
+
+select * from KardexSuministroTB
+go
+
+delete KardexSuministroTB 
+go
+
+print CONVERT (time, GETDATE())
+go
+
+insert into KardexSuministroTB (IdSuministro,Fecha,Hora,Tipo,Movimiento,Detalle,Cantidad,Costo,Total)
+select IdSuministro,CONVERT (date, GETDATE()),CONVERT (time, GETDATE()),1,2,'MONTO INICIAL',Cantidad,PrecioCompra,Cantidad*PrecioCompra from SuministroTB 
 go
