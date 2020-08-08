@@ -524,3 +524,217 @@ go
 insert into KardexSuministroTB (IdSuministro,Fecha,Hora,Tipo,Movimiento,Detalle,Cantidad,Costo,Total)
 select IdSuministro,CONVERT (date, GETDATE()),CONVERT (time, GETDATE()),1,2,'MONTO INICIAL',Cantidad,PrecioCompra,Cantidad*PrecioCompra from SuministroTB 
 go
+
+select * from TipoTicketTB
+go
+
+delete TicketTB where idTicket = 1 and predeterminado
+go
+
+
+/*
+05/08/2020
+*/
+
+
+ALTER procedure [dbo].[Sp_Obtener_Cliente_Informacion_NumeroDocumento]
+@opcion tinyint,
+@search varchar(100)
+as
+	begin
+		select IdCliente,TipoDocumento,NumeroDocumento,Informacion,Direccion,Celular from ClienteTB 
+		where 
+		@search = '' and @opcion = 1
+		or
+		NumeroDocumento = @search and @opcion = 2
+		or 
+		@search <> ''and Informacion like @search+'%' and @opcion = 3
+		or
+		@search <> ''and NumeroDocumento like @search+'%' and @opcion = 4
+		or
+		@search <> ''and Informacion like @search+'%' and @opcion = 4
+	end
+go
+
+
+/*
+06/08/2020
+*/
+ALTER procedure Sp_Listar_Suministros_Lista_View 
+@opcion smallint,
+@search varchar(100),
+@PosicionPagina smallint,
+@FilasPorPagina smallint
+as
+	begin
+		select IdSuministro,Clave,NombreMarca,dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') as Categoria,dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') as Marca,
+		Cantidad,PrecioCompra,
+		PrecioVentaGeneral,PrecioMargenGeneral,PrecioUtilidadGeneral,dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') as UnidadCompra,
+		UnidadVenta,Inventario,Impuesto,Lote,ValorInventario,Imagen
+		from SuministroTB 
+		where 
+		(@opcion = 0 and Estado = 1) 
+		or 
+		(@search<> '' and @opcion = 1 and Clave = @search and Estado = 1)
+		or
+		(@search<> '' and @opcion = 1 and ClaveAlterna = @search and Estado = 1)
+		or
+		(@search<> '' and @opcion = 1 and NombreMarca like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 2 and dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 3 and dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 4 and dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 5 and dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') like @search +'%' and Estado = 1)
+
+		order by IdSuministro asc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
+	end
+go
+
+ALTER procedure Sp_Listar_Suministros_Lista_View_Count
+@opcion smallint,
+@search varchar(100)
+as
+	begin
+		select count(*) as Total 
+		from SuministroTB 
+		where 
+		(@opcion = 0 and Estado = 1) 
+		or 
+		(@search<> '' and @opcion = 1 and Clave = @search and Estado = 1)
+		or
+		(@search<> '' and @opcion = 1 and ClaveAlterna = @search and Estado = 1)
+		or
+		(@search<> '' and @opcion = 1 and NombreMarca like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 2 and dbo.Fc_Obtener_Nombre_Detalle(Categoria,'0006') like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 3 and dbo.Fc_Obtener_Nombre_Detalle(Marca,'0007') like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 4 and dbo.Fc_Obtener_Nombre_Detalle(Presentacion,'0008') like @search +'%' and Estado = 1)
+		-----------------------------------------------------------------------------------------------------------
+		or
+		(@opcion = 5 and dbo.Fc_Obtener_Nombre_Detalle(UnidadCompra,'0013') like @search +'%' and Estado = 1)
+
+	end
+go
+
+ALTER procedure [dbo].[Sp_Listar_Ventas]
+@opcion smallint,
+@search varchar(100),
+@FechaInicial varchar(20),
+@FechaFinal varchar(20),
+@Comprobante int,
+@Estado int,
+@Vendedor varchar(12),
+@PosicionPagina smallint,
+@FilasPorPagina smallint
+as
+	select
+		v.IdVenta,
+		v.FechaVenta,
+		v.HoraVenta,
+		c.Informacion as Cliente,
+		td.Nombre as Comprobante,
+		v.Serie,v.Numeracion,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
+		m.Simbolo,
+		v.Total,
+		v.Observaciones
+		from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
+		inner join TipoDocumentoTB as td on v.Comprobante = IdTipoDocumento
+		inner join MonedaTB as m on v.Moneda = m.IdMoneda
+		where 
+		(v.Vendedor = @Vendedor and @search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) and @opcion = 1)
+		OR (v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
+		OR (v.Vendedor = @Vendedor and @search <> '' AND c.Informacion LIKE @search+'%' and @opcion = 1)
+		
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0
+		)
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 0
+		)
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 0
+		)
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0
+		)
+	--order by v.FechaVenta desc, v.HoraVenta desc descoffset @PosicionPagina rows fetch next @FilasPorPagina rows only
+	order by v.FechaVenta desc,v.HoraVenta desc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
+go
+
+alter procedure Sp_Listar_Ventas_Count
+@opcion smallint,
+@search varchar(100),
+@FechaInicial varchar(20),
+@FechaFinal varchar(20),
+@Comprobante int, 
+@Estado int,
+@Vendedor varchar(12)
+as
+	select COUNT(*) as Total from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
+		inner join TipoDocumentoTB as td on v.Comprobante = IdTipoDocumento
+		inner join MonedaTB as m on v.Moneda = m.IdMoneda
+		where 
+		(v.Vendedor = @Vendedor and @search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) and @opcion = 1)
+		OR (v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
+		OR (v.Vendedor = @Vendedor and @search <> '' AND c.Informacion LIKE @search+'%' and @opcion = 1)
+		
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0
+		)
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 0
+		)
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 0
+		)
+		OR
+		(v.Vendedor = @Vendedor and
+			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0
+		)
+go
+
+truncate table [dbo].[VentaTB]
+truncate table [dbo].[VentaCreditoTB]
+truncate table [dbo].[TipoDocumentoTB]
+truncate table [dbo].[MovimientoInventarioTB]
+truncate table [dbo].[MovimientoInventarioDetalleTB]
+truncate table [dbo].[MonedaTB]
+truncate table [dbo].[MovimientoCajaTB]
+truncate table [dbo].[ImpuestoTB]
+truncate table [dbo].[DetalleVentaTB]
+truncate table [dbo].[EmpresaTB]
+truncate table [dbo].[DetalleCompraTB]
+truncate table [dbo].[ComprobanteTB]
+truncate table [dbo].[CompraTB]
+truncate table [dbo].[CompraCreditoTB]
+truncate table [dbo].[CajaTB]
+truncate table [dbo].[BancoHistorialTB]
+truncate table [dbo].[Banco]
+truncate table [dbo].[AsignacionTB]
+truncate table [dbo].[AsignacionDetalleTB]
+go
+
+
+
+
