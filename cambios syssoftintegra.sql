@@ -628,6 +628,9 @@ as
 	end
 go
 
+[Sp_Listar_Ventas] 2,'','','',0,0,'',0,20
+go
+
 ALTER procedure [dbo].[Sp_Listar_Ventas]
 @opcion smallint,
 @search varchar(100),
@@ -656,25 +659,21 @@ as
 		inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		where 
 		(v.Vendedor = @Vendedor and @search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) and @opcion = 1)
-		OR (v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
-		OR (v.Vendedor = @Vendedor and @search <> '' AND c.Informacion LIKE @search+'%' and @opcion = 1)
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND c.Informacion LIKE @search+'%' and @opcion = 1)
 		
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0)
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 0)
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 0)
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0)
+		--OR
+		--(@search = '' and @opcion = 2)
 	--order by v.FechaVenta desc, v.HoraVenta desc descoffset @PosicionPagina rows fetch next @FilasPorPagina rows only
 	order by v.FechaVenta desc,v.HoraVenta desc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
 go
@@ -712,6 +711,62 @@ as
 		(v.Vendedor = @Vendedor and
 			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0
 		)
+go
+
+ALTER procedure [dbo].[Sp_Obtener_Venta_ById]
+@idVenta varchar(12)
+as
+	begin
+		select  v.FechaVenta,v.HoraVenta,
+		dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,
+		c.NumeroDocumento,c.Informacion,c.Direccion,c.Email,c.Celular,
+		t.Nombre as Comprobante,
+		v.Serie,v.Numeracion,v.Observaciones,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
+		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
+		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Tarjeta,v.Total,v.Codigo
+        from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
+		inner join ClienteTB as c on v.Cliente = c.IdCliente
+		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
+        where v.IdVenta = @idVenta
+	end
+GO
+
+alter procedure Sp_Listar_Compras_Credito
+@Search varchar(100),
+@FechaInicio varchar(20),
+@FechaFinal varchar(20),
+@Opcion tinyint
+as
+	select
+			c.IdCompra,p.IdProveedor,
+			c.FechaCompra,c.HoraCompra,
+			c.Serie,c.Numeracion,
+			p.NumeroDocumento,p.RazonSocial,
+			c.EstadoCompra,
+			dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') Estado,
+			dbo.Fc_Obtener_Simbolo_Moneda(c.TipoMoneda) as Simbolo,
+			c.Total
+			from CompraTB as c inner join ProveedorTB as p on c.Proveedor = p.IdProveedor	
+			where
+			 (@Opcion = 0 and c.TipoCompra = 2 and @Search = '') 
+			 or 
+			 (@Opcion = 0 and c.TipoCompra = 2 and p.NumeroDocumento like @Search+'%' )
+			 or 
+			 (@Opcion = 0 and c.TipoCompra = 2 and p.RazonSocial like @Search+'%' )
+			 or 
+			 (@Opcion = 0 and c.TipoCompra = 2 and c.Serie like @Search+'%' )
+			 or 
+			 (@Opcion = 0 and c.TipoCompra = 2 and c.Numeracion like @Search+'%' )
+			  or 
+			 (@Opcion = 0 and c.TipoCompra = 2 and CONCAT(c.Serie,'-',c.Numeracion) like @Search+'%' )
+			 or 
+			 (@Opcion = 1 and c.TipoCompra = 2 and c.FechaCompra between @FechaInicio and @FechaFinal )
+	order by c.FechaCompra desc,c.HoraCompra desc
+go
+
+
+select * from CompraTB
 go
 
 truncate table [dbo].[VentaTB]
