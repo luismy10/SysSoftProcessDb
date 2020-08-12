@@ -4,7 +4,7 @@ GO
 
 DROP PROCEDURE  Sp_Listar_CuentasHistorial_By_IdCuenta
 DROP PROCEDURE  Sp_Get_CuentasCliente_By_Id
-DROP PROCEDURE  ALMACENADO Sp_Get_Articulo_By_Id
+DROP PROCEDURE  Sp_Get_Articulo_By_Id
 DROP FUNCTION   Fc_Detalle_Generar_Codigo
 DROP PROCEDURE  Sp_Get_CuentasCliente_By_Id
 DROP PROCEDURE Sp_Listar_CuentasHistorial_By_IdCuenta
@@ -766,7 +766,7 @@ as
 go
 
 
-select * from CompraTB
+select * from ClienteTB
 go
 
 truncate table [dbo].[VentaTB]
