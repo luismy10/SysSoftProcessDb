@@ -628,7 +628,10 @@ as
 	end
 go
 
-[Sp_Listar_Ventas] 2,'','','',0,0,'',0,20
+select * from VentaTB
+go
+
+[Sp_Listar_Ventas] 2,'T001-00000097','14-08-2020','15-08-2020',0,0,'EM0001',0,20
 go
 
 ALTER procedure [dbo].[Sp_Listar_Ventas]
@@ -646,23 +649,28 @@ as
 		v.IdVenta,
 		v.FechaVenta,
 		v.HoraVenta,
-		c.Informacion as Cliente,
+		dbo.Fc_Obtener_Datos_Empleado(v.Vendedor) as Vendedor,
+		dbo.Fc_Obtener_NumeroDocumento_Cliente(v.Cliente) as DocumentoCliente,
+		dbo.Fc_Obtener_Datos_Cliente(v.Cliente) as Cliente,
 		td.Nombre as Comprobante,
 		v.Serie,v.Numeracion,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Simbolo,
+		dbo.Fc_Obtener_Simbolo_Moneda(v.Moneda) as Simbolo,
 		v.Total,
 		v.Observaciones
-		from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
+		from VentaTB as v
 		inner join TipoDocumentoTB as td on v.Comprobante = IdTipoDocumento
-		inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		where 
 		(v.Vendedor = @Vendedor and @search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) and @opcion = 1)
 		OR 
 		(v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
 		OR 
-		(v.Vendedor = @Vendedor and @search <> '' AND c.Informacion LIKE @search+'%' and @opcion = 1)
+		(v.Vendedor = @Vendedor and @search <> '' AND v.Serie LIKE @search+'%' and @opcion = 1)
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND v.Numeracion LIKE @search+'%' and @opcion = 1)
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND dbo.Fc_Obtener_Datos_Cliente(v.Cliente) LIKE @search+'%' and @opcion = 1)
 		
 		OR
 		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0)
@@ -672,7 +680,26 @@ as
 		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 0)
 		OR
 		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0)
-		--OR
+		
+		OR 
+		(@search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND v.Serie LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND v.Numeracion LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND dbo.Fc_Obtener_NumeroDocumento_Cliente(v.Cliente) LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND dbo.Fc_Obtener_Datos_Cliente(v.Cliente) LIKE @search+'%' and @opcion = 2)
+
+		OR
+		(CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 3)
+		OR
+		(CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 3)
+		OR
+		(CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 3)
+		OR
+		(CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 3)
 		--(@search = '' and @opcion = 2)
 	--order by v.FechaVenta desc, v.HoraVenta desc descoffset @PosicionPagina rows fetch next @FilasPorPagina rows only
 	order by v.FechaVenta desc,v.HoraVenta desc offset @PosicionPagina rows fetch next @FilasPorPagina rows only
@@ -687,30 +714,48 @@ alter procedure Sp_Listar_Ventas_Count
 @Estado int,
 @Vendedor varchar(12)
 as
-	select COUNT(*) as Total from VentaTB as v inner join ClienteTB as c on v.Cliente = c.IdCliente
+	select COUNT(*) as Total 
+		from VentaTB as v
 		inner join TipoDocumentoTB as td on v.Comprobante = IdTipoDocumento
-		inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		where 
 		(v.Vendedor = @Vendedor and @search = '' and CAST(v.FechaVenta as date) = CAST(GETDATE() as date) and @opcion = 1)
-		OR (v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
-		OR (v.Vendedor = @Vendedor and @search <> '' AND c.Informacion LIKE @search+'%' and @opcion = 1)
-		
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 1)
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND v.Serie LIKE @search+'%' and @opcion = 1)
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND v.Numeracion LIKE @search+'%' and @opcion = 1)
+		OR 
+		(v.Vendedor = @Vendedor and @search <> '' AND dbo.Fc_Obtener_Datos_Cliente(v.Cliente) LIKE @search+'%' and @opcion = 1)	
+			
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 0)
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 0)
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 0)
 		OR
-		(v.Vendedor = @Vendedor and
-			CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0
-		)
+		(v.Vendedor = @Vendedor and CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 0)
+
+		OR 
+		(@search <> '' AND CONCAT(v.Serie,'-',v.Numeracion) LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND v.Serie LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND v.Numeracion LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND dbo.Fc_Obtener_NumeroDocumento_Cliente(v.Cliente) LIKE @search+'%' and @opcion = 2)
+		OR 
+		(@search <> '' AND dbo.Fc_Obtener_Datos_Cliente(v.Cliente) LIKE @search+'%' and @opcion = 2)
+
+		OR
+		( CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0 AND @Estado = 0 and @opcion = 3)
+		OR
+		(CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante AND v.Estado = @Estado and @opcion = 3)
+		OR
+		(CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND v.Comprobante = @Comprobante  AND @Estado = 0 and @opcion = 3)
+		OR
+		(CAST(v.FechaVenta AS DATE) BETWEEN @FechaInicial AND @FechaFinal AND @Comprobante = 0  AND v.Estado = @Estado and @opcion = 3)
 go
 
 ALTER procedure [dbo].[Sp_Obtener_Venta_ById]
@@ -766,7 +811,58 @@ as
 go
 
 
-select * from ClienteTB
+alter function [dbo].[Fc_Obtener_Datos_Cliente]
+(
+@idCliente varchar(12)
+) returns varchar(100)
+
+as
+	begin
+		declare @datos varchar(100)
+		set @datos=	(select Informacion from ClienteTB where IdCliente = @idCliente)
+		return @datos
+	end
+go
+
+create function [dbo].[Fc_Obtener_NumeroDocumento_Cliente]
+(
+@idCliente varchar(12)
+) returns varchar(100)
+
+as
+	begin
+		declare @datos varchar(20)
+		set @datos=	(select NumeroDocumento from ClienteTB where IdCliente = @idCliente)
+		return @datos
+	end
+go
+
+ALTER function [dbo].[Fc_Obtener_Datos_Empleado]
+(
+@idProveedor varchar(12)
+) returns varchar(100)
+
+as
+	begin
+		declare @datos varchar(100)
+		set @datos=	(select Nombres+' '+Apellidos from EmpleadoTB where IdEmpleado = @idProveedor)
+		return @datos
+	end
+go
+
+alter procedure Sp_Obtener_Proveedor_For_ComboBox
+@search varchar(100)
+as
+	SELECT IdProveedor,NumeroDocumento,RazonSocial FROM ProveedorTB
+	WHERE (NumeroDocumento LIKE @search+'%') OR (RazonSocial LIKE @search+'%')
+go
+
+
+alter table VentaTB
+add 
+go
+
+select * from KardexSuministroTB
 go
 
 truncate table [dbo].[VentaTB]
