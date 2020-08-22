@@ -634,7 +634,7 @@ go
 [Sp_Listar_Ventas] 2,'T001-00000097','14-08-2020','15-08-2020',0,0,'EM0001',0,20
 go
 
-ALTER procedure [dbo].[Sp_Listar_Ventas]
+ALTER procedure Sp_Listar_Ventas
 @opcion smallint,
 @search varchar(100),
 @FechaInicial varchar(20),
@@ -649,14 +649,18 @@ as
 		v.IdVenta,
 		v.FechaVenta,
 		v.HoraVenta,
-		dbo.Fc_Obtener_Datos_Empleado(v.Vendedor) as Vendedor,
+		dbo.Fc_Obtener_Apellidos_Empleado(v.Vendedor) as ApellidosVendedor,
+		dbo.Fc_Obtener_Nombres_Empleado(v.Vendedor) as NombresVendedor,
 		dbo.Fc_Obtener_NumeroDocumento_Cliente(v.Cliente) as DocumentoCliente,
 		dbo.Fc_Obtener_Datos_Cliente(v.Cliente) as Cliente,
 		td.Nombre as Comprobante,
+		td.CodigoAlterno as ComprobanteCodigoAlterno,
 		v.Serie,v.Numeracion,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
 		dbo.Fc_Obtener_Simbolo_Moneda(v.Moneda) as Simbolo,
+		dbo.Fc_Obtener_Nombre_Moneda(v.Moneda) as NombreMoneda,
+		dbo.Fc_Obtener_Abreviatura_Moneda(v.Moneda) as AbreviaturaMoneda,
 		v.Total,
 		v.Observaciones
 		from VentaTB as v
@@ -857,12 +861,99 @@ as
 	WHERE (NumeroDocumento LIKE @search+'%') OR (RazonSocial LIKE @search+'%')
 go
 
+/*19-08-2020*/
 
-alter table VentaTB
-add 
+alter function [dbo].[Fc_Obtener_Apellidos_Empleado]
+(
+@idProveedor varchar(12)
+) returns varchar(100)
+
+as
+	begin
+		declare @datos varchar(100)
+		set @datos=	(select Apellidos from EmpleadoTB where IdEmpleado = @idProveedor)
+		return @datos
+	end
 go
 
-select * from KardexSuministroTB
+alter function [dbo].[Fc_Obtener_Nombres_Empleado]
+(
+@idProveedor varchar(12)
+) returns varchar(100)
+
+as
+	begin
+		declare @datos varchar(100)
+		set @datos=	(select Nombres from EmpleadoTB where IdEmpleado = @idProveedor)
+		return @datos
+	end
+go
+
+update SubmenuTB set Nombre = 'CORTES REALIZADOS' where IdSubmenu = 10
+go
+update SubmenuTB set Nombre = 'CUENTAS POR PAGAR' where IdSubmenu = 11
+go
+ INSERT INTO SubmenuTB(Nombre,IdMenu) VALUES('CUENTAS POR PAGAR',3)
+ GO
+  INSERT INTO SubmenuTB(Nombre,IdMenu) VALUES('BANCOS',3)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(1,3,32,1)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(1,3,33,1)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(2,3,32,0)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(2,3,33,0)
+ GO
+
+ 
+CREATE function [dbo].[Fc_Obtener_Nombre_Moneda]
+	(
+	 @IdMoneda int
+	)
+	RETURNS VARCHAR(10)
+	AS
+	BEGIN
+		DECLARE @Result VARCHAR(10)
+			BEGIN
+				SET @Result = (SELECT Nombre FROM MonedaTB WHERE IdMoneda = @IdMoneda)	
+			END
+			RETURN @Result
+	END
+GO
+
+CREATE function [dbo].[Fc_Obtener_Abreviatura_Moneda]
+	(
+	 @IdMoneda int
+	)
+	RETURNS VARCHAR(10)
+	AS
+	BEGIN
+		DECLARE @Result VARCHAR(10)
+			BEGIN
+				SET @Result = (SELECT Abreviado FROM MonedaTB WHERE IdMoneda = @IdMoneda)	
+			END
+			RETURN @Result
+	END
+GO
+
+ SELECT * FROM ImpuestoTB
+ go
+
+ select * from TipoDocumentoTB
+ go
+
+ select * from MonedaTB
+ go
+
+ alter table TipoDocumentoTB
+add CodigoAlterno varchar(10)
+go
+
+update TipoDocumentoTB set CodigoAlterno = ''
+go
+
+update TipoDocumentoTB set Sistema = 0
 go
 
 truncate table [dbo].[VentaTB]

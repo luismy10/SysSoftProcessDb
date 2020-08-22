@@ -201,13 +201,27 @@ select * from RolTB
 go
 select * from MenuTB
 go
-select * from SubmenuTB
+select * from SubmenuTB where IdMenu = 3
 go
 select * from PrivilegiosTB
 go
 
-update PrivilegiosTB set IdPrivilegio = IdPrivilegio+1
+update SubmenuTB set Nombre = 'CORTES REALIZADOS' where IdSubmenu = 10
 go
+update SubmenuTB set Nombre = 'CUENTAS POR PAGAR' where IdSubmenu = 11
+go
+ INSERT INTO SubmenuTB(Nombre,IdMenu) VALUES('CUENTAS POR PAGAR',3)
+ GO
+  INSERT INTO SubmenuTB(Nombre,IdMenu) VALUES('BANCOS',3)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(1,3,32,1)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(1,3,33,1)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(2,3,32,0)
+ GO
+ INSERT INTO PermisoSubMenusTB(IdRol,IdMenus,IdSubMenus,Estado) VALUES(2,3,33,0)
+ GO
 /**/
 select * from PermisoMenusTB
 go
@@ -315,4 +329,5 @@ as
 	end
 go
 
-
+select * from MantenimientoTB
+go
