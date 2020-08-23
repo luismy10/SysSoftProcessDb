@@ -940,6 +940,13 @@ GO
  SELECT * FROM ImpuestoTB
  go
 
+ alter table ImpuestoTB
+ add Codigo varchar(20),Numeracion varchar(20),NombreImpuesto varchar(20),Letra varchar(20),Categoria varchar(20)
+ go
+
+ update ImpuestoTB set Codigo = '',Numeracion = '',NombreImpuesto = '',Letra = '',Categoria = ''
+ go
+
  select * from TipoDocumentoTB
  go
 
@@ -954,6 +961,28 @@ update TipoDocumentoTB set CodigoAlterno = ''
 go
 
 update TipoDocumentoTB set Sistema = 0
+go
+
+
+select * from VentaTB
+go
+
+[dbo].[Sp_Listar_Ventas_Detalle_By_Id] 'VT0100'
+go
+
+ALTER procedure [dbo].[Sp_Listar_Ventas_Detalle_By_Id] 
+@IdVenta varchar(12)
+as
+	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
+	a.IdSuministro,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,a.ClaveSat,
+	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,	
+	d.Cantidad,d.CantidadGranel,d.CostoVenta,d.PrecioVenta,
+	d.Descuento,d.DescuentoCalculado,d.IdImpuesto,d.NombreImpuesto,d.ValorImpuesto,
+	i.CodigoAlterno,i.CodigoNombre1,CodigoNombre2,
+	d.Importe
+	from DetalleVentaTB as d inner join SuministroTB as a on d.IdArticulo = a.IdSuministro
+	inner join  ImpuestoTB as i on d.IdImpuesto = i.IdImpuesto
+	where d.IdVenta = @IdVenta
 go
 
 truncate table [dbo].[VentaTB]
