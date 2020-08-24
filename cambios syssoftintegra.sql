@@ -964,10 +964,10 @@ update TipoDocumentoTB set Sistema = 0
 go
 
 
-select * from VentaTB
+select * from VentaTB where IdVenta = 'VT0106'
 go
 
-[dbo].[Sp_Listar_Ventas_Detalle_By_Id] 'VT0100'
+[dbo].[Sp_Listar_Ventas_Detalle_By_Id] 'VT0106'
 go
 
 ALTER procedure [dbo].[Sp_Listar_Ventas_Detalle_By_Id] 
@@ -978,11 +978,14 @@ as
 	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,	
 	d.Cantidad,d.CantidadGranel,d.CostoVenta,d.PrecioVenta,
 	d.Descuento,d.DescuentoCalculado,d.IdImpuesto,d.NombreImpuesto,d.ValorImpuesto,
-	i.CodigoAlterno,i.CodigoNombre1,CodigoNombre2,
+	i.Codigo,i.Numeracion,i.NombreImpuesto,
 	d.Importe
 	from DetalleVentaTB as d inner join SuministroTB as a on d.IdArticulo = a.IdSuministro
 	inner join  ImpuestoTB as i on d.IdImpuesto = i.IdImpuesto
 	where d.IdVenta = @IdVenta
+go
+
+select * from EmpleadoTB
 go
 
 truncate table [dbo].[VentaTB]
