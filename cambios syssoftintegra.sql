@@ -988,27 +988,216 @@ go
 select * from EmpleadoTB
 go
 
-truncate table [dbo].[VentaTB]
-truncate table [dbo].[VentaCreditoTB]
-truncate table [dbo].[TipoDocumentoTB]
-truncate table [dbo].[MovimientoInventarioTB]
-truncate table [dbo].[MovimientoInventarioDetalleTB]
-truncate table [dbo].[MonedaTB]
-truncate table [dbo].[MovimientoCajaTB]
-truncate table [dbo].[ImpuestoTB]
-truncate table [dbo].[DetalleVentaTB]
-truncate table [dbo].[EmpresaTB]
-truncate table [dbo].[DetalleCompraTB]
-truncate table [dbo].[ComprobanteTB]
-truncate table [dbo].[CompraTB]
-truncate table [dbo].[CompraCreditoTB]
-truncate table [dbo].[CajaTB]
-truncate table [dbo].[BancoHistorialTB]
-truncate table [dbo].[Banco]
-truncate table [dbo].[AsignacionTB]
-truncate table [dbo].[AsignacionDetalleTB]
+alter procedure [dbo].[Sp_Listar_Compra_Credito_Abonar_Por_IdCompra]
+@IdCompra varchar(12)
+as
+	begin
+		select IdCompraCredito,Monto,FechaRegistro,fechaPago,HoraPago,Estado,IdTransaccion
+		from CompraCreditoTB 
+		where IdCompra = @IdCompra
+	end
+go
+
+alter procedure Sp_Listar_Compra_Credito_Abonar_Por_IdTransaccion
+@IdTransaccion varchar(12)
+as
+	begin
+		select IdCompraCredito,Monto,FechaRegistro,fechaPago,HoraPago,Estado 
+		from CompraCreditoTB 
+		where @IdTransaccion <> '' AND IdTransaccion = @IdTransaccion
+	end
+go
+
+create procedure [dbo].[Sp_Obtener_Proveedor_By_IdProveedor]
+@IdProveedor varchar(12)
+as
+	begin
+		select dbo.Fc_Obtener_Nombre_Detalle(p.TipoDocumento,'0003') as NombreDocumento,
+		p.NumeroDocumento,p.RazonSocial,p.Telefono,p.Celular,p.Direccion,p.Email 
+        from  ProveedorTB as p
+		where p.IdProveedor = @IdProveedor
+	end
+go
+
+ALTER procedure [dbo].[Sp_Obtener_Proveedor_ByIdCompra]
+@IdCompra varchar(12)
+as
+	begin
+		select c.Serie,c.Numeracion,c.EstadoCompra,
+		dbo.Fc_Obtener_Nombre_Detalle(c.EstadoCompra,'0009') EstadoName,
+		c.Total,
+		p.IdProveedor,
+		dbo.Fc_Obtener_Nombre_Detalle(p.TipoDocumento,'0003') as NombreDocumento,
+		p.NumeroDocumento,p.RazonSocial as Proveedor,
+		p.Telefono,p.Celular,p.Direccion,p.Email	
+        from CompraTB as c inner join ProveedorTB as p
+        on c.Proveedor = p.IdProveedor
+        where c.IdCompra = @IdCompra
+	end
+go
+
+select * from [dbo].[TransaccionTB]
+go
+
+select * from CompraTB
+go
+
+select * from CompraCreditoTB
+go
+
+print dbo.Fc_Cambiar_Estado_Compra('CP0074')
+go
+
+alter function Fc_Cambiar_Estado_Compra(@IdCompra varchar(12))  returns varchar(10)
+as
+	begin
+		declare @TotalCompra smallint,@NumeroTotalCompra smallint,@Estado varchar(10)
+		set @TotalCompra = (select count(*) from CompraCreditoTB where IdCompra = @IdCompra)
+		set @NumeroTotalCompra = (select count(*) from CompraCreditoTB where IdCompra = @IdCompra and Estado = 1)
+		if(@TotalCompra = @NumeroTotalCompra)
+			begin
+				set @Estado = 'completado'
+			end
+		else
+			begin
+				set @Estado = 'falta'
+			end		
+		return @Estado
+	end
+go
+
+SELECT IdCompra FROM  CompraCreditoTB WHERE IdTransaccion = ''
+GO
+
+ALTER TABLE CompraCreditoTB
+ALTER COLUMN Monto decimal(18,8)
+go
+
+ALTER TABLE CompraCreditoTB
+ADD IdTransaccion varchar(12) 
+go
+
+update CompraCreditoTB set IdTransaccion = ''
 go
 
 
+/*
+1=inreso
+2=salida
+*/
+
+create table TransaccionTB(
+IdTransaccion varchar(12) not null primary key,
+Fecha date not null,
+Hora time not null,
+Descripcion varchar(200),
+TipoTransaccion smallint,
+Monto decimal(18,8),
+Usuario varchar(12)
+)
+go
+
+select * from ImpuestoTB
+go
+
+ALTER procedure [dbo].[Sp_Listar_Impuestos]
+as
+begin
+select IdImpuesto,dbo.Fc_Obtener_Nombre_Detalle(Operacion,'0010') as Operacion,
+Nombre,Valor,Predeterminado,Codigo,Sistema 
+from [dbo].[ImpuestoTB]
+end
+go
+
+
+truncate table[dbo].[AsignacionDetalleTB]
+truncate table[dbo].[AsignacionTB]
+truncate table[dbo].[Banco]
+truncate table[dbo].[BancoHistorialTB]
+truncate table[dbo].[CajaTB]
+truncate table[dbo].[ClienteTB]
+truncate table[dbo].[CompraCreditoTB]
+truncate table[dbo].[CompraTB]
+truncate table[dbo].[ComprobanteTB]
+truncate table[dbo].[DetalleCompraTB]
+truncate table[dbo].[DetalleVentaTB]
+truncate table[dbo].[DirectorioTB]
+truncate table[dbo].[EmpleadoTB]
+truncate table[dbo].[EmpresaTB]
+truncate table[dbo].[EtiquetaTB]
+truncate table[dbo].[ImagenTB]
+truncate table[dbo].[ImpuestoTB]
+truncate table[dbo].[KardexSuministroTB]
+truncate table[dbo].[LoteTB]
+truncate table[dbo].[MonedaTB]
+truncate table[dbo].[MovimientoCajaTB]
+truncate table[dbo].[MovimientoInventarioDetalleTB]
+truncate table[dbo].[MovimientoInventarioTB]
+truncate table[dbo].[PlazosTB]
+truncate table[dbo].[ProveedorTB]
+truncate table[dbo].[TicketTB]
+truncate table[dbo].[TipoDocumentoTB]
+truncate table[dbo].[VentaCreditoTB]
+truncate table[dbo].[VentaTB]
+update SuministroTB set Cantidad = 0
+go
+
+ALTER procedure [dbo].[Sp_Listar_Ventas_Detalle_By_Id] 
+@IdVenta varchar(12)
+as
+	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
+	a.IdSuministro,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,a.ClaveSat,
+	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,	
+	d.Cantidad,d.CantidadGranel,d.CostoVenta,d.PrecioVenta,
+	d.Descuento,d.DescuentoCalculado,d.IdImpuesto,d.NombreImpuesto,d.ValorImpuesto,
+	i.Codigo,i.Numeracion,i.NombreImpuesto,i.Letra,i.Categoria,
+	d.Importe
+	from DetalleVentaTB as d inner join SuministroTB as a on d.IdArticulo = a.IdSuministro
+	inner join  ImpuestoTB as i on d.IdImpuesto = i.IdImpuesto
+	where d.IdVenta = @IdVenta
+go
+
+
+
+print [dbo].[Fc_Transaccion_Codigo_Alfanumerico]() 
+go
+
+ALTER function Fc_Transaccion_Codigo_Alfanumerico ()  returns varchar(12)
+	as
+		begin
+		declare @Incremental int,@ValorActual varchar(12),@CodGenerado varchar(12)
+			begin
+				if EXISTS(select IdTransaccion from TransaccionTB)
+					begin					
+						set @ValorActual = (select MAX(CAST(REPLACE(REPLACE(IdTransaccion,'TA-',''),'','')AS INT)) from TransaccionTB)
+						set @Incremental = CONVERT(INT,@ValorActual) +1
+						if(@Incremental <= 9)
+							begin
+								set @CodGenerado = 'TA-000'+CONVERT(VARCHAR,@Incremental)
+							end
+						else if(@Incremental>=10 and @Incremental<=99)
+							begin
+								set @CodGenerado = 'TA-00'+CONVERT(VARCHAR,@Incremental)
+							end
+						else if(@Incremental>=100 and @Incremental<=999)
+							begin
+								set @CodGenerado = 'TA-0'+CONVERT(VARCHAR,@Incremental)
+							end
+						else
+							begin
+								set @CodGenerado = 'TA-'+CONVERT(VARCHAR,@Incremental)
+							end
+					end
+				else
+					begin
+						set @CodGenerado = 'TA-0001'
+					end
+			end
+			return @CodGenerado
+		end
+go
+
+drop function [dbo].[Fc_Articulo_Codigo_Alfanumerico]
+go
 
 
