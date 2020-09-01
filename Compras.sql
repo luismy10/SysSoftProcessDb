@@ -64,11 +64,8 @@ ALTER procedure [dbo].[Sp_Listar_Compras]
 @FechaFinal varchar(20),
 @EstadoCompra int
 as
-<<<<<<< HEAD
-select ROW_NUMBER() over( order by c.FechaCompra desc) as Filas,c.IdCompra,p.IdProveedor,
-=======
+
 select c.IdCompra,p.IdProveedor,
->>>>>>> 56bcd7ae8313dd5448bdff866007572a82bf11e1
 			c.FechaCompra,c.HoraCompra,
 			c.Serie,c.Numeracion,
 			p.NumeroDocumento,p.RazonSocial,
