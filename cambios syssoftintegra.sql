@@ -1036,13 +1036,13 @@ as
 	end
 go
 
-select * from [dbo].[TransaccionTB]
+select * from TransaccionTB
 go
 
 select * from CompraTB
 go
 
-select * from CompraCreditoTB
+select * from CompraCreditoTB where IdCompra = 'CP0098'
 go
 
 print dbo.Fc_Cambiar_Estado_Compra('CP0074')
@@ -1228,3 +1228,35 @@ drop function [dbo].[Fc_Articulo_Codigo_Alfanumerico]
 go
 
 
+/*
+buscar cambios
+*/
+
+ALTER procedure [dbo].[Sp_Listar_Ventas_Detalle_By_Id] 
+@IdVenta varchar(12)
+as
+	select /*ROW_NUMBER() over( order by d.IdArticulo desc) as Filas ,*/
+	a.IdSuministro,a.Clave,a.NombreMarca,a.Inventario,a.ValorInventario,a.ClaveSat,
+	dbo.Fc_Obtener_Nombre_Detalle(a.UnidadCompra,'0013') as UnidadCompra,	
+	d.Cantidad,d.CantidadGranel,d.CostoVenta,d.PrecioVenta,
+	d.Descuento,d.DescuentoCalculado,d.IdImpuesto,d.NombreImpuesto,d.ValorImpuesto,
+	i.Codigo,i.Numeracion,i.NombreImpuesto,i.Letra,i.Categoria,
+	d.Importe
+	from DetalleVentaTB as d inner join SuministroTB as a on d.IdArticulo = a.IdSuministro
+	inner join  ImpuestoTB as i on d.IdImpuesto = i.IdImpuesto
+	where d.IdVenta = @IdVenta
+go
+
+create procedure Sp_Obtener_Caja_Aperturada_By_Id
+@IdCaja varchar(12)
+as
+	begin
+		select a.IdCaja,a.FechaApertura,a.HoraApertura,a.FechaCierre,
+		a.HoraCierre,a.Contado,a.Calculado,
+		a.Diferencia,e.Apellidos,e.Nombres 
+		from CajaTB as a inner join EmpleadoTB as e
+		on a.IdUsuario = e.IdEmpleado
+		where 
+		a.IdCaja = @IdCaja	
+	end
+go
