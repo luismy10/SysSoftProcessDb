@@ -773,7 +773,7 @@ as
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Tarjeta,v.Total,v.Codigo
+		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Tarjeta,v.Impuesto,v.Total,v.Codigo
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
@@ -1259,4 +1259,14 @@ as
 		where 
 		a.IdCaja = @IdCaja	
 	end
+go
+
+alter table VentaTB
+add Impuesto decimal(18,8)
+go
+
+UPDATE VentaTB SET Impuesto = 0
+GO
+
+select * from VentaTB
 go
