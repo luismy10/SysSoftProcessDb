@@ -773,13 +773,16 @@ as
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Estado,'0009') Estado,
-		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Tarjeta,v.Impuesto,v.Total,v.Codigo
+		m.Nombre,m.Abreviado,m.Simbolo,v.Efectivo,v.Vuelto,v.Tarjeta,v.SubTotal,v.Descuento,v.Impuesto,v.Total,v.Codigo
         from VentaTB as v inner join MonedaTB as m on v.Moneda = m.IdMoneda
 		inner join ClienteTB as c on v.Cliente = c.IdCliente
 		inner join TipoDocumentoTB as t on v.Comprobante = t.IdTipoDocumento
         where v.IdVenta = @idVenta
 	end
 GO
+
+select  * from VentaTB
+go
 
 alter procedure Sp_Listar_Compras_Credito
 @Search varchar(100),
@@ -1270,3 +1273,16 @@ GO
 
 select * from VentaTB
 go
+
+select * from TipoTicketTB
+go
+
+select * from OPE_PRODUCTO where CODIGO_BARRA like 'hs%'
+go
+
+select * from OPEVW_STOCK where ID_PRODUCTO = '154228'
+go
+
+select * from OPEVW_STOCKALL where ID_PRODUCTO = '154228'
+go
+
