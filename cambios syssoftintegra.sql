@@ -26,6 +26,9 @@ Estado bit not null
 )
 go
 
+select * from PaisTB
+go
+
 SELECT * FROM SuministroTB
 GO
 
@@ -768,7 +771,7 @@ as
 	begin
 		select  v.FechaVenta,v.HoraVenta,
 		dbo.Fc_Obtener_Nombre_Detalle(c.TipoDocumento,'0003') as NombreDocumento,
-		c.NumeroDocumento,c.Informacion,c.Direccion,c.Email,c.Celular,
+		c.NumeroDocumento,c.Informacion,c.Telefono,c.Celular,c.Email,c.Direccion,
 		t.Nombre as Comprobante,
 		v.Serie,v.Numeracion,v.Observaciones,
 		dbo.Fc_Obtener_Nombre_Detalle(v.Tipo,'0015') Tipo,
@@ -1271,6 +1274,9 @@ go
 UPDATE VentaTB SET Impuesto = 0
 GO
 
+select * from ClienteTB
+go
+
 select * from VentaTB
 go
 
@@ -1286,3 +1292,68 @@ go
 select * from OPEVW_STOCKALL where ID_PRODUCTO = '154228'
 go
 
+
+ALTER procedure [dbo].[Sp_Obtener_Cliente_Informacion_NumeroDocumento]
+@opcion tinyint,
+@search varchar(100)
+as
+	begin
+		select IdCliente,TipoDocumento,NumeroDocumento,Informacion,Celular,Email,Direccion from ClienteTB 
+		where 
+		@search = '' and @opcion = 1
+		or
+		NumeroDocumento = @search and @opcion = 2
+		or 
+		@search <> ''and Informacion like @search+'%' and @opcion = 3
+		or
+		@search <> ''and NumeroDocumento like @search+'%' and @opcion = 4
+		or
+		@search <> ''and Informacion like @search+'%' and @opcion = 4
+	end
+go
+Sp_Obtener_Cliente_Informacion_NumeroDocumento
+go
+
+[dbo].[Sp_Listar_Ventas_Mostrar] ''
+go
+
+ALTER procedure [dbo].[Sp_Listar_Ventas_Mostrar]
+@Search varchar(100)
+as
+	select
+		v.IdVenta,
+		dbo.Fc_Obtener_Datos_Cliente(v.Cliente) as Cliente,
+		v.FechaVenta,
+		v.HoraVenta,
+		v.Serie,
+		v.Numeracion,
+		dbo.Fc_Obtener_Simbolo_Moneda(v.Moneda) as Simbolo,
+		v.Total
+		from VentaTB as v
+		where 
+		@Search <> '' and @Search = v.Serie and v.FechaVenta = cast(GETDATE() as date)
+		or
+		@Search <> '' and @Search = cast(v.Numeracion as int) and v.FechaVenta = cast(GETDATE() as date)
+		or
+		@Search <> '' and @Search = v.Serie+'-'+cast(v.Numeracion as int) and v.FechaVenta = cast(GETDATE() as date)
+		or
+		@Search <> '' and @Search like dbo.Fc_Obtener_Datos_Cliente(v.Cliente)+'%' and v.FechaVenta = cast(GETDATE() as date)
+	   order by v.FechaVenta desc , v.HoraVenta asc
+go
+
+alter procedure [dbo].[Sp_Listar_Ventas_10_Primeras]
+as
+	select 
+		top 10
+		v.IdVenta,
+		dbo.Fc_Obtener_Datos_Cliente(v.Cliente) as Cliente,
+		v.FechaVenta,
+		v.HoraVenta,
+		v.Serie,
+		v.Numeracion,
+		dbo.Fc_Obtener_Simbolo_Moneda(v.Moneda) as Simbolo,
+		v.Total
+		from VentaTB as v
+		where v.FechaVenta = cast(GETDATE() as date)		
+	    order by v.FechaVenta asc , v.HoraVenta desc
+go
